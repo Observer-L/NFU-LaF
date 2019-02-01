@@ -1,0 +1,85 @@
+<style lang="less">
+.header {
+  padding: 20px 0;
+  background: #fff;
+  .user_info {
+    display: flex;
+    align-items: center;
+    flex-direction:column;
+    .avatar {
+      image {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px solid #f8f8f8;
+      }
+    }
+  }
+}
+</style>
+<template>
+  <view>
+    <view class="header">
+      <view class="user_info">
+        <view
+          class="avatar"
+          @tap="login"
+        >
+          <image src="{{userInfo.avatarUrl}}" alt=""></image>
+        </view>
+        <view class="nickname">{{userInfo.nickname}}</view>
+      </view>
+    </view>
+
+    <view class="list">
+      <i-cell-group>
+        <i-cell title="修改联系信息" is-link></i-cell>
+        <i-cell title="跳转到首页" is-link url="/pages/dashboard/index"></i-cell>
+        <i-cell title="只有 footer 点击有效" is-link url="/pages/dashboard/index" only-tap-footer></i-cell>
+        <i-cell title="开关">
+          <switch slot="footer" checked />
+        </i-cell>
+      </i-cell-group>
+    </view>
+
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '个人中心',
+      usingComponents: {
+        'i-cell-group': '../components/iview/cell-group/index',
+        'i-cell': '../components/iview/cell/index'
+      }
+    }
+    components = {}
+
+    mixins = []
+
+    data = {
+      isLogin: false,
+      userInfo: {
+        nickname: '未登录',
+        avatarUrl: '../images/avatar.png'
+      }
+    }
+
+    computed = {}
+
+    methods = {
+      login(e) {
+        console.log(e)
+      }
+    }
+
+    events = {
+    }
+
+    onLoad() {
+    }
+  }
+</script>

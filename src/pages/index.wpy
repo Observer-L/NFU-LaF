@@ -1,7 +1,198 @@
 <style lang="less">
+  .header {
+    display: flex;
+    margin: 18rpx 0;
+    align-items: center;
+
+    .search {
+      flex: 1;
+
+      .search-inner {
+        height: 52rpx;
+      }
+    }
+
+    .menu, .filter {
+      width: 72rpx;
+      text-align: center;
+    }
+  }
+
+  .map {
+    .action-btn {
+      position: absolute;
+      overflow: visible;
+      right: 0;
+      bottom: 0;
+      margin: 28rpx;
+
+      .active {
+        width: 100rpx;
+        height: 100rpx;
+        line-height: 100rpx;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 26px;
+        color: #fff;
+        background: tomato;
+      }
+
+      .options {
+        position: absolute;
+        top: -130rpx;
+        left: -130rpx;
+        width: 260rpx;
+        height: 260rpx;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .8);
+
+        .option {
+          background: tomato;
+          position: absolute;
+
+          &.lost {
+            right: 60rpx;
+            top: 50rpx;
+          }
+
+          &.found {
+            bottom: 60rpx;
+            left: 50rpx;
+          }
+
+          &.close {
+            bottom: 30rpx;
+            right: 30rpx;
+            width: 100rpx;
+            height: 100rpx;
+            line-height: 100rpx;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 26px;
+            color: #fff;
+            background: tomato;
+          }
+        }
+      }
+    }
+  }
+
+  .actions {
+    display: flex;
+    background: #fff;
+
+    .action {
+      display: flex;
+      flex: 1;
+      justify-content: center;
+      align-items: center;
+      height: 120rpx;
+
+      i {
+        margin-right: 12rpx;
+      }
+    }
+  }
+
+  .list {
+    .item {
+      background: #fff;
+      .item_title {
+        display: flex;
+        overflow: hidden;
+        justify-content: space-between;
+        border-radius: 80px 0px 10px 10px;
+        .item_status {
+          &.lost {
+            width: 260rpx;
+            text-align: center;
+            background-color: rgba(255,197,4,1);
+            transform: skewX(-30deg);
+            text {
+              display: inline-block;
+              transform: skewX(30deg);
+              color: #fff;
+              font-size: 18px;
+            }
+          }
+        }
+      }
+    }
+  }
 </style>
 <template>
-  <view class="container">
+  <view>
+    <view class="header">
+      <i class="iconfont icon-menu menu"></i>
+      <i-input
+        class="search"
+        i-class="search-inner"
+        value="{{ value5 }}"
+        mode="normal"
+        placeholder="找点什么~">
+      </i-input>
+      <i class="iconfont icon-filter-fill filter"></i>
+    </view>
+
+
+    <view class="map">
+      <map
+        id="map"
+        longitude="113.324520"
+        latitude="23.099994"
+        scale="14"
+        bindregionchange="regionchange"
+        show-location
+        style="width: 100%; height: 680rpx;"
+      >
+        <cover-view class="action-btn">
+          <cover-view class="options">
+            <cover-view class="option lost">失物</cover-view>
+            <cover-view class="option found">拾物</cover-view>
+            <cover-view class="option close">x</cover-view>
+          </cover-view>
+          <cover-view class="active">
+            +
+          </cover-view>
+        </cover-view>
+      </map>
+    </view>
+
+
+    <!--<view class="actions">-->
+    <!--<view-->
+    <!--class="action"-->
+    <!--&gt;-->
+    <!--<i class="iconfont icon-shiwuzhaoling"></i>-->
+    <!--寻物-->
+    <!--</view>-->
+    <!--<view-->
+    <!--class="action"-->
+    <!--&gt;-->
+    <!--<i class="iconfont icon-shiwuzhaoling"></i>-->
+    <!--拾物-->
+    <!--</view>-->
+    <!--</view>-->
+
+      <view class="list">
+        <view class="item">
+          <view class="item_title">
+            <view class="item_status lost">
+              <text>LOST</text>
+            </view>
+            <view class="item_reported_time">Reported: 1 week ago</view>
+          </view>
+          <i-card
+            title="卡片标题"
+            extra="额外内容"
+            full="true"
+            thumb="https://i.loli.net/2017/08/21/599a521472424.jpg">
+            <view slot="content">内容不错</view>
+            <view slot="footer">尾部内容</view>
+          </i-card>
+        </view>
+      </view>
+
   </view>
 </template>
 
@@ -10,13 +201,24 @@
 
   export default class Index extends wepy.page {
     config = {
-      navigationBarTitleText: '南苑寻物'
+      navigationBarTitleText: '南苑寻物',
+      usingComponents: {
+        'i-panel': '../components/iview/panel/index',
+        'i-input': '../components/iview/input/index',
+        'i-button': '../components/iview/button/index',
+        'i-icon': '../components/iview/icon/index',
+        'i-row': '../components/iview/row/index',
+        'i-col': '../components/iview/col/index',
+        'i-card': '../components/iview/card/index'
+      }
     }
     components = {}
 
     mixins = []
 
-    data = {}
+    data = {
+      isActive: false
+    }
 
     computed = {}
 
