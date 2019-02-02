@@ -1,21 +1,23 @@
 <style lang="less">
-.header {
-  padding: 20px 0;
-  background: #fff;
-  .user_info {
-    display: flex;
-    align-items: center;
-    flex-direction:column;
-    .avatar {
-      image {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        border: 2px solid #f8f8f8;
+  .header {
+    padding: 20px 0;
+    background: #fff;
+
+    .user_info {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+
+      .avatar {
+        image {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          border: 2px solid #f8f8f8;
+        }
       }
     }
   }
-}
 </style>
 <template>
   <view>
@@ -23,7 +25,7 @@
       <view class="user_info">
         <view
           class="avatar"
-          @tap="login"
+          @tap="{{isAuth ? null : 'login'}}"
         >
           <image src="{{userInfo.avatarUrl}}" alt=""></image>
         </view>
@@ -33,53 +35,119 @@
 
     <view class="list">
       <i-cell-group>
-        <i-cell title="修改联系信息" is-link></i-cell>
-        <i-cell title="跳转到首页" is-link url="/pages/dashboard/index"></i-cell>
+        <i-cell
+          title="修改联系信息"
+          is-link
+          url="/pages/contact"
+        ></i-cell>
+        <i-cell
+          title="隐私设置"
+          is-link
+          url="/pages/privacy"></i-cell>
         <i-cell title="只有 footer 点击有效" is-link url="/pages/dashboard/index" only-tap-footer></i-cell>
         <i-cell title="开关">
-          <switch slot="footer" checked />
+          <switch slot="footer" checked/>
         </i-cell>
       </i-cell-group>
     </view>
+
+    <i-modal
+      title="授权"
+      show-ok="{{false}}"
+      show-cancel="{{false}}"
+      visible="{{ showModal }}"
+    >
+      <view>是否授权应用获取您的微信信息</view>
+      <i-button
+        @tap="handleCancel"
+        inline
+      >取消
+      </i-button>
+      <i-button
+        bindgetuserinfo="handleConfirm"
+        open-type="getUserInfo"
+        inline
+        type="primary"
+      >确定
+      </i-button>
+    </i-modal>
+    <i-message id="message"/>
 
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import Http from '@/utils/http'
+  import db from '@/utils/db'
+
+  const { $Message } = require('../components/iview/base/index')
 
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '个人中心',
       usingComponents: {
         'i-cell-group': '../components/iview/cell-group/index',
-        'i-cell': '../components/iview/cell/index'
+        'i-cell': '../components/iview/cell/index',
+        'i-modal': '../components/iview/modal/index',
+        'i-message': '../components/iview/message/index',
+        'i-button': '../components/iview/button/index'
       }
     }
-    components = {}
-
-    mixins = []
 
     data = {
       isLogin: false,
+      isAuth: false,
       userInfo: {
-        nickname: '未登录',
+        nickname: '未授权',
         avatarUrl: '../images/avatar.png'
-      }
+      },
+      showModal: false
     }
-
-    computed = {}
 
     methods = {
-      login(e) {
-        console.log(e)
+      login() {
+        this.showModal = true
+      },
+      handleCancel() {
+        this.showModal = false
+        $Message({
+          content: '拒绝授权将影响应用使用体验',
+          type: 'warning'
+        })
+      },
+      async handleConfirm(e) {
+        const userInfo = db.Get('userInfo')
+        const detail = e.detail.userInfo
+        const resp = await Http.Post('user', {
+          avatarUrl: detail.avatarUrl,
+          nickname: detail.nickName,
+          user_id: userInfo.id
+        })
+        if (resp.code === 1) {
+          userInfo.avatarUrl = detail.avatarUrl
+          userInfo.nickname = detail.nickName
+          this.userInfo = userInfo
+          this.$parent.globalData.userInfo = userInfo
+          db.Set('userInfo', userInfo)
+        }
+        this.showModal = false
+        this.isAuth = true
+        this.$apply()
+        $Message({
+          content: '授权成功',
+          type: 'success'
+        })
       }
-    }
-
-    events = {
     }
 
     onLoad() {
+      const userInfo = this.$parent.globalData.userInfo
+      if (userInfo.nickname && userInfo.avatarUrl) {
+        this.userInfo = userInfo
+      } else {
+        this.isAuth = false
+      }
     }
   }
 </script>

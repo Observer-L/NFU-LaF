@@ -5,12 +5,16 @@
 <script>
   import wepy from 'wepy'
   import 'wepy-async-function'
+  import db from './utils/db'
+  import Login from './utils/login'
 
   export default class extends wepy.app {
     config = {
       pages: [
+        'pages/index',
+        'pages/contact',
         'pages/my',
-        'pages/index'
+        'pages/privacy'
       ],
       window: {
         backgroundTextStyle: 'light',
@@ -48,18 +52,8 @@
     }
 
     onLaunch() {
-    }
-
-    getUserInfo(cb) {
-      const that = this
-      if (this.globalData.userInfo) {
-        return this.globalData.userInfo
-      }
-      wepy.getUserInfo({
-        success(res) {
-          that.globalData.userInfo = res.userInfo
-          cb && cb(res.userInfo)
-        }
+      new Login().getToken().then(() => {
+        this.globalData.userInfo = db.Get('userInfo')
       })
     }
   }

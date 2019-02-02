@@ -1,0 +1,151 @@
+<style lang="less">
+</style>
+<template>
+  <view>
+    <i-panel title="基本信息">
+      <i-input
+        value="{{ newUserInfo.name }}"
+        title="姓名"
+        placeholder="请输入姓名"
+        @change="handleChangeName"
+        maxlength="8"
+      />
+
+      <i-input
+        value="{{ newUserInfo.nickname }}"
+        title="昵称"
+        placeholder="请输入昵称"
+        @change="handleChangeNickname"
+        maxlength="10"
+      />
+
+      <i-input
+        value="{{ newUserInfo.phone }}"
+        type="number"
+        title="电话"
+        placeholder="请输入手机号"
+        @change="handleChangePhone"
+        maxlength="12"
+      />
+
+      <i-input
+        value="{{ newUserInfo.qq }}"
+        type="number"
+        title="QQ"
+        placeholder="请输入QQ号"
+        @change="handleChangeQQ"
+        maxlength="12"
+      />
+
+      <i-input
+        value="{{ newUserInfo.wechat }}"
+        title="微信号"
+        placeholder="请输入微信号"
+        @change="handleChangeWechat"
+        maxlength="15"
+      />
+
+      <i-input
+        value="{{ newUserInfo.email }}"
+        title="邮箱"
+        autofocus="{{autofocus}}"
+        placeholder="请输入邮箱"
+        @change="handleChangeEmail"
+        maxlength="20"
+      />
+      <i-alert type="warning" show-icon style="display: {{isValidEmail ? 'none' : 'block'}}">
+        邮箱格式错误
+      </i-alert>
+    </i-panel>
+
+    <i-button @tap="handleSubmit" type="primary" loading="{{isLoading}}">确认</i-button>
+    <i-toast id="toast"/>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Http from '@/utils/http'
+  import db from '@/utils/db'
+  import { validateEmail } from '../utils/validate_input'
+
+  const { $Toast } = require('@/components/iview/base/index')
+
+  export default class Contact extends wepy.page {
+    config = {
+      navigationBarTitleText: '修改联系信息',
+      usingComponents: {
+        'i-panel': '../components/iview/panel/index',
+        'i-input': '../components/iview/input/index',
+        'i-switch': '../components/iview/switch/index',
+        'i-cell': '../components/iview/cell/index',
+        'i-button': '../components/iview/button/index',
+        'i-toast': '../components/iview/toast/index',
+        'i-alert': '../components/iview/alert/index'
+      }
+    }
+
+    data = {
+      isValidEmail: true,
+      isLoading: false,
+      autofocus: false,
+      newUserInfo: null,
+      userInfo: null
+    }
+
+    methods = {
+      handleChangeName(e) {
+        this.newUserInfo.name = e.detail.detail.value
+      },
+      handleChangeNickname(e) {
+        this.newUserInfo.nickname = e.detail.detail.value
+      },
+      handleChangePhone(e) {
+        this.newUserInfo.phone = e.detail.detail.value
+      },
+      handleChangeQQ(e) {
+        this.newUserInfo.qq = e.detail.detail.value
+      },
+      handleChangeWechat(e) {
+        this.newUserInfo.wechat = e.detail.detail.value
+      },
+      handleChangeEmail(e) {
+        const email = e.detail.detail.value
+        this.newUserInfo.email = email
+        if (!this.isValidEmail) {
+          const isValidEmail = validateEmail(email)
+          this.isValidEmail = !!isValidEmail
+        }
+      },
+
+      async handleSubmit() {
+        const isValidEmail = validateEmail(this.newUserInfo.email)
+        this.isValidEmail = !!isValidEmail
+        if (!isValidEmail) return
+        this.loading = true
+        const newUserInfo = Object.assign(this.userInfo, this.newUserInfo)
+        const resp = await Http.Post('user/info', newUserInfo)
+        if (resp.code === 1) {
+          db.Set('userInfo', newUserInfo)
+          this.userInfo = newUserInfo
+          this.$parent.globalData.userInfo = newUserInfo
+          this.loading = false
+          $Toast({
+            content: '信息更新成功',
+            duration: 0,
+            type: 'success'
+          })
+          setTimeout(() => {
+            $Toast.hide()
+            wepy.navigateBack()
+          }, 2000)
+        }
+      }
+    }
+
+    onLoad() {
+      this.userInfo = this.$parent.globalData.userInfo
+      this.newUserInfo = Object.assign({}, this.$parent.globalData.userInfo)
+    }
+  }
+</script>

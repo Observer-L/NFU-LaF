@@ -21,7 +21,7 @@
   .map {
     .action-btn {
       position: absolute;
-      overflow: visible;
+      /*overflow: visible;*/
       right: 0;
       bottom: 0;
       margin: 28rpx;
@@ -157,22 +157,6 @@
         </cover-view>
       </map>
     </view>
-
-
-    <!--<view class="actions">-->
-    <!--<view-->
-    <!--class="action"-->
-    <!--&gt;-->
-    <!--<i class="iconfont icon-shiwuzhaoling"></i>-->
-    <!--寻物-->
-    <!--</view>-->
-    <!--<view-->
-    <!--class="action"-->
-    <!--&gt;-->
-    <!--<i class="iconfont icon-shiwuzhaoling"></i>-->
-    <!--拾物-->
-    <!--</view>-->
-    <!--</view>-->
 
       <view class="list">
         <view class="item">
