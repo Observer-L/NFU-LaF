@@ -1,0 +1,68 @@
+<style lang="less">
+  swiper {
+    height: 500rpx;
+    swiper-item {
+      image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+</style>
+<template>
+  <view>
+    <view class="header">
+      <swiper
+        indicator-dots="{{true}}"
+        autoplay="{{true}}"
+        interval="{{3000}}"
+        duration="{{500}}"
+      >
+        <block wx:for="{{imgUrls}}" wx:key="{{index}}">
+          <swiper-item>
+            <image src="{{item}}" class="slide-image"/>
+          </swiper-item>
+        </block>
+      </swiper>
+    </view>
+
+    <view class="detail">
+      <van-panel title="标题" desc="描述信息" status="{{status}}" use-footer-slot>
+        <view>内容</view>
+        <view slot="footer">
+          <van-button size="small">联系</van-button>
+          <van-button size="small" type="primary">{{postType === '丢失' ? '认领' : '告知'}}</van-button>
+        </view>
+      </van-panel>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class Detail extends wepy.page {
+    config = {
+      navigationBarTitleText: '丢失详情',
+      usingComponents: {
+        'van-panel': '../components/vant/panel/index',
+        'van-button': '../components/vant/button/index'
+      }
+    }
+
+    data = {
+      postType: '',
+      status: '未完成',
+      imgUrls: [
+        'https://www.qiniu.com/assets/banner/banner-qvm1rmb-index-3c79c38ee87a7b6a0ef8ff28b2d8da9a28e567bdf3cb9bea8ea761d601be7ce6.jpg',
+        'https://www.qiniu.com/assets/banner/banner-kodo-private-d96be9240375eea0f8ee290148a6a36c09b2ba77b14324873d6b5c0d9c772a5c.jpg'
+      ]
+    }
+
+    methods = {}
+
+    onLoad(options) {
+      this.postType = options.type === 'lost' ? '丢失' : '捡到'
+    }
+  }
+</script>

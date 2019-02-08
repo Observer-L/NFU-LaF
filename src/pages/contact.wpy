@@ -2,64 +2,70 @@
 </style>
 <template>
   <view>
-    <i-panel title="基本信息">
-      <i-input
+
+    <van-cell-group>
+      <van-field
         value="{{ newUserInfo.name }}"
-        title="姓名"
+        label="姓名"
         placeholder="请输入姓名"
-        @change="handleChangeName"
+        border="{{ false }}"
+        left-icon="contact"
+        bind:change="handleChangeName"
         maxlength="8"
       />
-
-      <i-input
+      <van-field
         value="{{ newUserInfo.nickname }}"
-        title="昵称"
+        label="昵称"
         placeholder="请输入昵称"
-        @change="handleChangeNickname"
+        border="{{ false }}"
+        left-icon="contact"
+        bind:change="handleChangeNickname"
         maxlength="10"
       />
-
-      <i-input
+      <van-field
         value="{{ newUserInfo.phone }}"
+        label="电话"
+        placeholder="请输入电话"
         type="number"
-        title="电话"
-        placeholder="请输入手机号"
-        @change="handleChangePhone"
-        maxlength="12"
+        border="{{ false }}"
+        left-icon="contact"
+        bind:change="handleChangePhone"
+        maxlength="11"
       />
-
-      <i-input
+      <van-field
         value="{{ newUserInfo.qq }}"
+        label="QQ"
+        placeholder="请输入QQ"
         type="number"
-        title="QQ"
-        placeholder="请输入QQ号"
-        @change="handleChangeQQ"
+        border="{{ false }}"
+        left-icon="contact"
+        bind:change="handleChangeQQ"
         maxlength="12"
       />
-
-      <i-input
+      <van-field
         value="{{ newUserInfo.wechat }}"
-        title="微信号"
+        label="微信号"
         placeholder="请输入微信号"
-        @change="handleChangeWechat"
-        maxlength="15"
-      />
-
-      <i-input
-        value="{{ newUserInfo.email }}"
-        title="邮箱"
-        autofocus="{{autofocus}}"
-        placeholder="请输入邮箱"
-        @change="handleChangeEmail"
+        type="number"
+        border="{{ false }}"
+        left-icon="contact"
+        bind:change="handleChangeWechat"
         maxlength="20"
       />
-      <i-alert type="warning" show-icon style="display: {{isValidEmail ? 'none' : 'block'}}">
-        邮箱格式错误
-      </i-alert>
-    </i-panel>
+      <van-field
+        value="{{ newUserInfo.email }}"
+        label="邮箱"
+        placeholder="请输入邮箱"
+        border="{{ false }}"
+        left-icon="contact"
+        bind:change="handleChangeEmail"
+        maxlength="20"
+      />
+    </van-cell-group>
 
-    <i-button @tap="handleSubmit" type="primary" loading="{{isLoading}}">确认</i-button>
-    <i-toast id="toast"/>
+
+    <van-button size="large" type="primary" loading="{{isLoading}}" @tap="handleSubmit">确定</van-button>
+    <van-toast id="van-toast"/>
   </view>
 </template>
 
@@ -69,19 +75,16 @@
   import db from '@/utils/db'
   import { validateEmail } from '../utils/validate_input'
 
-  const { $Toast } = require('@/components/iview/base/index')
+  import Toast from '../components/vant/toast/toast'
 
   export default class Contact extends wepy.page {
     config = {
       navigationBarTitleText: '修改联系信息',
       usingComponents: {
-        'i-panel': '../components/iview/panel/index',
-        'i-input': '../components/iview/input/index',
-        'i-switch': '../components/iview/switch/index',
-        'i-cell': '../components/iview/cell/index',
-        'i-button': '../components/iview/button/index',
-        'i-toast': '../components/iview/toast/index',
-        'i-alert': '../components/iview/alert/index'
+        'van-field': '../components/vant/field/index',
+        'van-cell-group': '../components/vant/cell-group/index',
+        'van-button': '../components/vant/button/index',
+        'van-toast': '../components/vant/toast/index'
       }
     }
 
@@ -95,22 +98,22 @@
 
     methods = {
       handleChangeName(e) {
-        this.newUserInfo.name = e.detail.detail.value
+        this.newUserInfo.name = e.detail
       },
       handleChangeNickname(e) {
-        this.newUserInfo.nickname = e.detail.detail.value
+        this.newUserInfo.nickname = e.detail
       },
       handleChangePhone(e) {
-        this.newUserInfo.phone = e.detail.detail.value
+        this.newUserInfo.phone = e.detail
       },
       handleChangeQQ(e) {
-        this.newUserInfo.qq = e.detail.detail.value
+        this.newUserInfo.qq = e.detail
       },
       handleChangeWechat(e) {
-        this.newUserInfo.wechat = e.detail.detail.value
+        this.newUserInfo.wechat = e.detail
       },
       handleChangeEmail(e) {
-        const email = e.detail.detail.value
+        const email = e.detail
         this.newUserInfo.email = email
         if (!this.isValidEmail) {
           const isValidEmail = validateEmail(email)
@@ -119,9 +122,28 @@
       },
 
       async handleSubmit() {
+        // 表单验证
+        let isValidSubmit
+        for (const i in this.newUserInfo) {
+          let value = this.newUserInfo[i] !== null && String(this.newUserInfo[i]).replace(/\s+/g, '').length !== 0
+          if (value) {
+            isValidSubmit = true
+          } else {
+            isValidSubmit = false
+            break
+          }
+        }
         const isValidEmail = validateEmail(this.newUserInfo.email)
         this.isValidEmail = !!isValidEmail
-        if (!isValidEmail) return
+        if (!isValidSubmit) {
+          Toast.fail('请完成信息填写')
+          return
+        }
+        if (!isValidEmail) {
+          Toast.fail('邮箱格式错误')
+          return
+        }
+        // 表单验证 —— END
         this.loading = true
         const newUserInfo = Object.assign(this.userInfo, this.newUserInfo)
         const resp = await Http.Post('user/info', newUserInfo)
@@ -130,13 +152,9 @@
           this.userInfo = newUserInfo
           this.$parent.globalData.userInfo = newUserInfo
           this.loading = false
-          $Toast({
-            content: '信息更新成功',
-            duration: 0,
-            type: 'success'
-          })
+          Toast.success('保存成功')
           setTimeout(() => {
-            $Toast.hide()
+            Toast.clear()
             wepy.navigateBack()
           }, 2000)
         }

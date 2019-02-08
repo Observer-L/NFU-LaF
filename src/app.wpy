@@ -12,9 +12,12 @@
     config = {
       pages: [
         'pages/index',
+        'pages/privacy',
+        'pages/detail',
         'pages/contact',
+        'pages/post',
         'pages/my',
-        'pages/privacy'
+        'pages/corner'
       ],
       window: {
         backgroundTextStyle: 'light',
@@ -31,6 +34,12 @@
             text: '首页',
             iconPath: '/images/icon/home.png',
             selectedIconPath: '/images/icon/home@select.png'
+          },
+          {
+            pagePath: 'pages/corner',
+            text: '角落',
+            iconPath: '/images/icon/corner.png',
+            selectedIconPath: '/images/icon/corner@select.png'
           },
           {
             pagePath: 'pages/my',

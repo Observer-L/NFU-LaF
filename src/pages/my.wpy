@@ -34,45 +34,35 @@
     </view>
 
     <view class="list">
-      <i-cell-group>
-        <i-cell
+      <van-cell-group>
+        <van-cell
           title="修改联系信息"
+          value="内容"
           is-link
           url="/pages/contact"
-        ></i-cell>
-        <i-cell
+        />
+        <van-cell
           title="隐私设置"
+          value="内容"
+          label="描述信息"
+          border="{{ false }}"
           is-link
-          url="/pages/privacy"></i-cell>
-        <i-cell title="只有 footer 点击有效" is-link url="/pages/dashboard/index" only-tap-footer></i-cell>
-        <i-cell title="开关">
-          <switch slot="footer" checked/>
-        </i-cell>
-      </i-cell-group>
+          url="/pages/privacy"
+        />
+      </van-cell-group>
     </view>
 
-    <i-modal
-      title="授权"
-      show-ok="{{false}}"
-      show-cancel="{{false}}"
-      visible="{{ showModal }}"
-    >
-      <view>是否授权应用获取您的微信信息</view>
-      <i-button
-        @tap="handleCancel"
-        inline
-      >取消
-      </i-button>
-      <i-button
-        bindgetuserinfo="handleConfirm"
-        open-type="getUserInfo"
-        inline
-        type="primary"
-      >确定
-      </i-button>
-    </i-modal>
-    <i-message id="message"/>
 
+    <van-dialog
+      title="授权"
+      message="请授权应用获取您的微信信息以获得更好的服务"
+      show="{{ showDialog }}"
+      show-cancel-button
+      id="van-dialog"
+      confirm-button-open-type="getUserInfo"
+      bind:getuserinfo="getUserInfo"
+      bind:cancel="handleCancel"/>
+    <van-toast id="van-toast"/>
   </view>
 </template>
 
@@ -81,17 +71,16 @@
   import Http from '@/utils/http'
   import db from '@/utils/db'
 
-  const { $Message } = require('../components/iview/base/index')
+  import Toast from '../components/vant/toast/toast'
 
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '个人中心',
       usingComponents: {
-        'i-cell-group': '../components/iview/cell-group/index',
-        'i-cell': '../components/iview/cell/index',
-        'i-modal': '../components/iview/modal/index',
-        'i-message': '../components/iview/message/index',
-        'i-button': '../components/iview/button/index'
+        'van-cell-group': '../components/vant/cell-group/index',
+        'van-cell': '../components/vant/cell/index',
+        'van-dialog': '../components/vant/dialog/index',
+        'van-toast': '../components/vant/toast/index'
       }
     }
 
@@ -102,23 +91,25 @@
         nickname: '未授权',
         avatarUrl: '../images/avatar.png'
       },
-      showModal: false
+      showDialog: false
     }
 
     methods = {
       login() {
-        this.showModal = true
+        this.showDialog = true
       },
       handleCancel() {
-        this.showModal = false
-        $Message({
-          content: '拒绝授权将影响应用使用体验',
-          type: 'warning'
-        })
+        this.showDialog = false
+        Toast.fail('拒绝授权将影响应用使用体验')
       },
-      async handleConfirm(e) {
+      async getUserInfo(e) {
         const userInfo = db.Get('userInfo')
         const detail = e.detail.userInfo
+        if (!detail) {
+          this.showDialog = false
+          Toast.fail('拒绝授权将影响应用使用体验')
+          return
+        }
         const resp = await Http.Post('user', {
           avatarUrl: detail.avatarUrl,
           nickname: detail.nickName,
@@ -131,13 +122,10 @@
           this.$parent.globalData.userInfo = userInfo
           db.Set('userInfo', userInfo)
         }
-        this.showModal = false
+        this.showDialog = false
         this.isAuth = true
         this.$apply()
-        $Message({
-          content: '授权成功',
-          type: 'success'
-        })
+        Toast.success('授权成功')
       }
     }
 
@@ -145,6 +133,7 @@
       const userInfo = this.$parent.globalData.userInfo
       if (userInfo.nickname && userInfo.avatarUrl) {
         this.userInfo = userInfo
+        this.isAuth = true
       } else {
         this.isAuth = false
       }

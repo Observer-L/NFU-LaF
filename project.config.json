@@ -12,5 +12,6 @@
 	"appid": "wxad0cc8367a80e854",
 	"projectname": "nfu-laf",
 	"miniprogramRoot": "dist/",
+	"libVersion": "2.5.2",
 	"condition": {}
 }

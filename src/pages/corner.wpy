@@ -1,0 +1,28 @@
+<style lang="less">
+</style>
+<template>
+  <view>
+    corner
+    失落的世界
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class Corner extends wepy.page {
+    config = {
+      navigationBarTitleText: '失落的世界',
+      usingComponents: {
+      }
+    }
+
+    data = {
+    }
+
+    methods = {
+    }
+
+    onLoad() {}
+  }
+</script>
