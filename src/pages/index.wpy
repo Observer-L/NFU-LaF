@@ -19,17 +19,18 @@
       position: absolute;
       right: 0;
       bottom: 0;
-      margin: 28rpx;
+      margin: 14rpx;
       color: #fff;
 
       .options {
         background: rgba(0, 0, 0, .7);
-        transform: scale(0);
-        transition: transform .3s ease;
+        transform: translateY(250rpx);
+        transition: transform .2s ease;
         transform-origin: bottom;
+        text-align: center;
 
         &.show {
-          transform: scale(1);
+          transform: translateY(0);
         }
 
         .option {
@@ -38,6 +39,9 @@
       }
 
       .toggle-btn {
+        width:160rpx;
+        height:60rpx;
+        line-height:60rpx;
         text-align: center;
         background: rgba(0, 0, 0, .7);
       }
@@ -45,67 +49,9 @@
   }
 
   .list {
-    .item {
-      .item_title {
-        background: #fff;
-        display: flex;
-        overflow: hidden;
-        justify-content: space-between;
-        border-radius: 80px 0 0 0;
-
-        .item_status {
-          color: #fff;
-          font-size: 18px;
-          line-height: 26px;
-          text-align: center;
-
-          text {
-            display: inline-block;
-            transform: skewX(30deg);
-          }
-
-          &.lost, &.found {
-            width: 260rpx;
-            transform: skewX(-30deg);
-          }
-
-          &.lost {
-            background-color: rgb(255, 197, 4);
-          }
-
-          &.found {
-            background-color: rgb(119, 181, 65);
-          }
-        }
-
-        .item_reported_time {
-          display: flex;
-          align-items: center;
-          margin-right: 6px;
-
-          .item_reported_time_prefix {
-            font-size: 12px;
-            color: #aaa;
-            margin-right: 6px;
-          }
-        }
-      }
-
-      .card {
-        background: #fff;
-        padding-bottom: 20rpx;
-        .details {
-          .detail {
-            display: flex;
-            align-items: center;
-
-            .prefix {
-              font-size: 12px;
-              margin-right: 6px;
-            }
-          }
-        }
-      }
+    padding: 20rpx;
+    >.card {
+      margin-bottom: 26rpx;
     }
   }
 </style>
@@ -120,10 +66,12 @@
     <view class="map">
       <map
         id="map"
-        longitude="113.324520"
-        latitude="23.099994"
-        scale="14"
+        longitude="113.679121"
+        latitude="23.632366"
+        scale="16"
         show-location
+        markers="{{markers}}"
+        @markertap="handleMarkerTap"
         style="width: 100%; height: 680rpx;"
       >
         <cover-view class="action-btn">
@@ -139,68 +87,51 @@
     </view>
 
     <view class="list">
-      <view class="item" @tap="handleClickItem">
-        <view class="item_title">
-          <view class="item_status lost">
-            <text>LOST</text>
-          </view>
-          <view class="item_reported_time">
-            <text class="item_reported_time_prefix">Reported:</text>
-            <text>1 week ago</text>
-          </view>
-        </view>
-
-        <van-card
-          num="2"
-          tag="标签"
-          price="10.00"
-          title="校园卡"
-          thumb="https://i.loli.net/2017/08/21/599a521472424.jpg"
-          custom-class="card"
-        >
-          <view slot="desc" class="details">
-            <view class="detail detail_time">
-              <view class="prefix">丢失时间：</view>
-              <view class="time">三天前</view>
-            </view>
-            <view class="detail detail_color">
-              <view class="prefix">物品颜色：</view>
-              <view class="time">黑色</view>
-            </view>
-          </view>
-        </van-card>
+      <van-transition show="{{ showCard }}" class="card" name="fade-down" >
+        <Card :info.sync="targetPOI"></Card>
+      </van-transition>
 
       </view>
-    </view>
 
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import Card from '../components/card'
 
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '南苑寻物',
       usingComponents: {
         'van-card': '../components/vant/card/index',
-        'van-search': '../components/vant/search/index'
+        'van-search': '../components/vant/search/index',
+        'van-transition': '../components/vant/transition/index'
       }
     }
-    components = {}
+
+    components = {
+      Card
+    }
 
     data = {
-      isActive: false
+      isActive: false,
+      markers: [],
+      targetPOI: null,
+      showCard: false
     }
 
     methods = {
+      handleMarkerTap(e) {
+        for (let i = 0; i < this.markers.length; i++) {
+          if (this.markers[i].id === e.markerId) {
+            this.targetPOI = this.markers[i]
+          }
+        }
+        this.showCard = true
+      },
       handleToggleAction() {
         this.isActive = !this.isActive
-      },
-      handleClickItem() {
-        wx.navigateTo({
-          url: '/pages/detail?type=lost'
-        })
       },
       handleClickLost() {
         wx.navigateTo({
@@ -214,9 +145,8 @@
       }
     }
 
-    events = {}
-
     onLoad() {
+      this.markers = this.$parent.globalData.mapData
     }
   }
 </script>

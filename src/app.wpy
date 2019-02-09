@@ -7,15 +7,16 @@
   import 'wepy-async-function'
   import db from './utils/db'
   import Login from './utils/login'
-
+  import {map} from './markers'
   export default class extends wepy.app {
     config = {
       pages: [
         'pages/index',
-        'pages/privacy',
         'pages/detail',
+        'pages/privacy',
         'pages/contact',
         'pages/post',
+        'pages/history',
         'pages/my',
         'pages/corner'
       ],
@@ -52,7 +53,8 @@
     }
 
     globalData = {
-      userInfo: null
+      userInfo: null,
+      mapData: []
     }
 
     constructor() {
@@ -64,6 +66,28 @@
       new Login().getToken().then(() => {
         this.globalData.userInfo = db.Get('userInfo')
       })
+      this.loadMapData()
     }
+
+    loadMapData() {
+      const mapData = map.map
+      for (let i = 0; i < mapData.length; i++) {
+        for (let j = 0; j < mapData[i].data.length; j++) {
+          const POI = mapData[i].data[j]
+          // POI.id = j + 1
+          POI.width = 36
+          POI.height = 36
+          POI.type = mapData[i].type
+          POI.iconPath = POI.type === 'LOST' ? '/images/icon/location.png' : '/images/icon/location@found.png'
+          POI.label = {
+            content: POI.itemType,
+            color: '#000000',
+            fontSize: 16
+          }
+          this.globalData.mapData.push(POI)
+        }
+      }
+    }
+
   }
 </script>

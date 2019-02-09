@@ -1,0 +1,121 @@
+<template lang="wxml">
+<view @tap="handleClickItem" class="card">
+  <view class="item">
+    <view class="item_title">
+      <view class="item_status {{info.type === 'LOST' ? 'lost' : 'found'}}">
+        <text>{{info.type}}</text>
+      </view>
+      <view class="item_reported_time">
+        <text class="item_reported_time_prefix">Reported:</text>
+        <text>1 week ago</text>
+      </view>
+    </view>
+  </view>
+  <van-card
+    tag="标签"
+    title="{{info.itemType}} - {{info.itemDetail.name}}"
+    thumb="{{info.itemDetail.pics[0]}}"
+  >
+    <view slot="desc" class="details">
+      <view class="detail detail_time">
+        <view class="prefix">丢失时间：</view>
+        <view class="time">{{info.itemDetail.time}}</view>
+      </view>
+      <view class="detail detail_desc">
+        <view class="prefix">更多信息：</view>
+        <view class="time">{{info.itemDetail.desc ? info.itemDetail.desc : '暂无描述'}}</view>
+      </view>
+    </view>
+ </van-card>
+</view>
+</template>
+
+<script>
+import wepy from 'wepy'
+export default class Card extends wepy.component {
+  props = {
+    info: Object
+  }
+
+  methods = {
+    handleClickItem() {
+      wx.navigateTo({
+        url: '/pages/detail?type=lost&id=' + this.info.id
+      })
+    }
+  }
+
+  onLoad() {
+  }
+}
+</script>
+
+<style lang="less">
+  .item {
+    .item_title {
+      background: #fff;
+      display: flex;
+      overflow: hidden;
+      justify-content: space-between;
+      border-radius: 80px 0 0 0;
+
+      .item_status {
+        color: #fff;
+        font-size: 18px;
+        line-height: 26px;
+        text-align: center;
+        transition: background-color .2s ease-out;
+
+        text {
+          display: inline-block;
+          letter-spacing:2px;
+          transform: skewX(30deg);
+        }
+
+        &.lost, &.found {
+          width: 260rpx;
+          transform: skewX(-30deg);
+        }
+
+        &.lost {
+          /*background-color: rgb(255, 197, 4);*/
+          background-color: #d81e06;
+        }
+
+        &.found {
+          /*background-color: rgb(119, 181, 65);*/
+          background-color: #1296db;
+        }
+      }
+
+      .item_reported_time {
+        display: flex;
+        align-items: center;
+        margin-right: 6px;
+
+        .item_reported_time_prefix {
+          font-size: 12px;
+          color: #aaa;
+          margin-right: 6px;
+        }
+      }
+    }
+  }
+  .card {
+    padding-bottom: 20rpx !important;
+    .van-card {
+      background: #fff;
+    }
+    .details {
+      .detail {
+        display: flex;
+        align-items: center;
+
+        .prefix {
+          font-size: 12px;
+          margin-right: 6px;
+        }
+      }
+    }
+  }
+</style>

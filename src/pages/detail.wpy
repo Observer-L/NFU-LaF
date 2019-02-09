@@ -1,6 +1,7 @@
 <style lang="less">
   swiper {
     height: 500rpx;
+
     swiper-item {
       image {
         width: 100%;
@@ -18,7 +19,7 @@
         interval="{{3000}}"
         duration="{{500}}"
       >
-        <block wx:for="{{imgUrls}}" wx:key="{{index}}">
+        <block wx:for="{{itemDetail.pics}}" wx:key="{{index}}">
           <swiper-item>
             <image src="{{item}}" class="slide-image"/>
           </swiper-item>
@@ -27,11 +28,12 @@
     </view>
 
     <view class="detail">
-      <van-panel title="标题" desc="描述信息" status="{{status}}" use-footer-slot>
-        <view>内容</view>
+      <van-panel title="{{itemDetail.name}}" desc="{{itemDetail.desc}}" status="{{itemDetail.status}}" use-footer-slot>
+        <view>{{itemDetail.time}}</view>
+        <view>{{itemDetail.place}}</view>
+        <view>{{itemDetail.type}}</view>
         <view slot="footer">
-          <van-button size="small">联系</van-button>
-          <van-button size="small" type="primary">{{postType === '丢失' ? '认领' : '告知'}}</van-button>
+          <van-button size="large" type="primary">{{postType === '丢失' ? '认领' : '告知'}}</van-button>
         </view>
       </van-panel>
     </view>
@@ -52,17 +54,25 @@
 
     data = {
       postType: '',
-      status: '未完成',
-      imgUrls: [
-        'https://www.qiniu.com/assets/banner/banner-qvm1rmb-index-3c79c38ee87a7b6a0ef8ff28b2d8da9a28e567bdf3cb9bea8ea761d601be7ce6.jpg',
-        'https://www.qiniu.com/assets/banner/banner-kodo-private-d96be9240375eea0f8ee290148a6a36c09b2ba77b14324873d6b5c0d9c772a5c.jpg'
-      ]
+      itemDetail: {
+        name: '校园卡',
+        type: '卡片/证件',
+        time: '三周前（2019-02-06）',
+        place: '图书馆',
+        desc: 'descdescdescdescdescdescdescdescdesc',
+        pics: [
+          'https://www.qiniu.com/assets/banner/banner-qvm1rmb-index-3c79c38ee87a7b6a0ef8ff28b2d8da9a28e567bdf3cb9bea8ea761d601be7ce6.jpg',
+          'https://www.qiniu.com/assets/banner/banner-kodo-private-d96be9240375eea0f8ee290148a6a36c09b2ba77b14324873d6b5c0d9c772a5c.jpg'
+        ],
+        status: '未完成'
+      }
     }
 
     methods = {}
 
     onLoad(options) {
       this.postType = options.type === 'lost' ? '丢失' : '捡到'
+      console.log(options)
     }
   }
 </script>

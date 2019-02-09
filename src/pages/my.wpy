@@ -37,17 +37,30 @@
       <van-cell-group>
         <van-cell
           title="修改联系信息"
-          value="内容"
           is-link
           url="/pages/contact"
+          icon="friends-o"
         />
         <van-cell
           title="隐私设置"
-          value="内容"
           label="描述信息"
           border="{{ false }}"
           is-link
           url="/pages/privacy"
+          icon="setting-o"
+        />
+        <van-cell
+          title="历史记录"
+          is-link
+          border="{{ false }}"
+          url="/pages/history"
+          icon="underway-o"
+        />
+        <van-cell
+          is-link
+          title="反馈建议"
+          border="{{ false }}"
+          icon="comment-o"
         />
       </van-cell-group>
     </view>

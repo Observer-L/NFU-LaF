@@ -1,0 +1,27 @@
+<style lang="less">
+</style>
+<template>
+  <view>
+    历史记录
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class History extends wepy.page {
+    config = {
+      navigationBarTitleText: '历史记录',
+      usingComponents: {
+      }
+    }
+
+    data = {
+    }
+
+    methods = {
+    }
+
+    onLoad() {}
+  }
+</script>
