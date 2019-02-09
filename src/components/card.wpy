@@ -1,7 +1,7 @@
 <template lang="wxml">
 <view @tap="handleClickItem" class="card">
   <view class="item">
-    <view class="item_title">
+    <view class="item_title {{info.type === 'LOST' ? 'lost' : 'found'}}">
       <view class="item_status {{info.type === 'LOST' ? 'lost' : 'found'}}">
         <text>{{info.type}}</text>
       </view>
@@ -15,6 +15,7 @@
     tag="标签"
     title="{{info.itemType}} - {{info.itemDetail.name}}"
     thumb="{{info.itemDetail.pics[0]}}"
+    custom-class="card_body {{info.type === 'LOST' ? 'lost' : 'found'}}"
   >
     <view slot="desc" class="details">
       <view class="detail detail_time">
@@ -58,6 +59,16 @@ export default class Card extends wepy.component {
       overflow: hidden;
       justify-content: space-between;
       border-radius: 80px 0 0 0;
+      border-width: 2px;
+      border-bottom-width: 0;
+      border-style: solid;
+      transition: border-color .2s ease-out;
+      &.lost {
+        border-color: #d81e06;
+      }
+      &.found {
+        border-color: #1296db;
+      }
 
       .item_status {
         color: #fff;
@@ -92,9 +103,10 @@ export default class Card extends wepy.component {
         display: flex;
         align-items: center;
         margin-right: 6px;
+        font-size: 14px;
 
         .item_reported_time_prefix {
-          font-size: 12px;
+          font-size: 80%;
           color: #aaa;
           margin-right: 6px;
         }
@@ -103,8 +115,19 @@ export default class Card extends wepy.component {
   }
   .card {
     padding-bottom: 20rpx !important;
-    .van-card {
+    .card_body {
       background: #fff;
+      border-width: 2px;
+      border-top-width: 0;
+      border-style: solid;
+      transition: border-color .2s ease-out;
+      border-radius: 0 0 6px 6px;
+      &.lost {
+        border-color: #d81e06;
+      }
+      &.found {
+        border-color: #1296db;
+      }
     }
     .details {
       .detail {

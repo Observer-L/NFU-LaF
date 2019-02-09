@@ -19,11 +19,10 @@
       position: absolute;
       right: 0;
       bottom: 0;
-      margin: 14rpx;
+      margin: 8rpx;
       color: #fff;
 
       .options {
-        background: rgba(0, 0, 0, .7);
         transform: translateY(250rpx);
         transition: transform .2s ease;
         transform-origin: bottom;
@@ -34,6 +33,7 @@
         }
 
         .option {
+          background: rgba(0, 0, 0, .7);
           padding: 10px;
         }
       }
@@ -43,8 +43,15 @@
         height:60rpx;
         line-height:60rpx;
         text-align: center;
-        background: rgba(0, 0, 0, .7);
+        background: rgba(0, 0, 0, 1);
       }
+    }
+    .mask {
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,.5);
+      z-index: 50;
     }
   }
 
@@ -58,12 +65,12 @@
 <template>
   <view>
     <view class="header">
-      <i class="iconfont icon-menu menu"></i>
+      <i class="iconfont icon-menu menu" @tap="handleShowLeftMenu"></i>
       <van-search value="{{ value }}" placeholder="请输入搜索关键词" class="search"/>
       <i class="iconfont icon-filter-fill filter"></i>
     </view>
 
-    <view class="map">
+    <view class="map" style="{{showLeftMenu ? 'margin-left: 50%' : ''}}">
       <map
         id="map"
         longitude="113.679121"
@@ -83,6 +90,7 @@
             {{isActive ? 'x' : '+'}}
           </cover-view>
         </cover-view>
+        <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}" @tap="handleCloseLeftMenu"></cover-view>
       </map>
     </view>
 
@@ -90,8 +98,11 @@
       <van-transition show="{{ showCard }}" class="card" name="fade-down" >
         <Card :info.sync="targetPOI"></Card>
       </van-transition>
+    </view>
 
-      </view>
+    <van-popup show="{{ showLeftMenu }}" @close="handleCloseLeftMenu" position="left" custom-style="width: 50%;height: 100%;">
+      LeftMenu
+    </van-popup>
 
   </view>
 </template>
@@ -106,7 +117,8 @@
       usingComponents: {
         'van-card': '../components/vant/card/index',
         'van-search': '../components/vant/search/index',
-        'van-transition': '../components/vant/transition/index'
+        'van-transition': '../components/vant/transition/index',
+        'van-popup': '../components/vant/popup/index'
       }
     }
 
@@ -118,7 +130,8 @@
       isActive: false,
       markers: [],
       targetPOI: null,
-      showCard: false
+      showCard: false,
+      showLeftMenu: false
     }
 
     methods = {
@@ -142,6 +155,12 @@
         wx.navigateTo({
           url: '/pages/post?type=found'
         })
+      },
+      handleShowLeftMenu() {
+        this.showLeftMenu = true
+      },
+      handleCloseLeftMenu() {
+        this.showLeftMenu = false
       }
     }
 
