@@ -1,8 +1,10 @@
 <style lang="less">
+  @import "../style/custom";
   .header {
     display: flex;
     margin: 18rpx 0;
     align-items: center;
+    z-index: 10;
 
     .search {
       flex: 1;
@@ -46,6 +48,42 @@
         background: rgba(0, 0, 0, 1);
       }
     }
+    .filter {
+      position:absolute;
+      right:0;
+      top:0;
+      padding: 0 20rpx 20rpx 20rpx;
+      background:#f8f8f8;
+      color: #fff;
+      transition: transform .2s ease-out;
+      transform: translateX(150rpx);
+      z-index: 1;
+      &.active {
+        transform: translateX(0);
+      }
+      .lost, .found {
+        padding: 8rpx;
+        font-size: 14px;
+        text-align: center;
+        background: rgba(0,0,0,.2);
+        color: #000;
+        transition: all .2s ease;
+        &.selected {
+          color: #fff;
+        }
+      }
+      .lost {
+        &.selected {
+          background: @lostColor;
+        }
+        margin-bottom: 8rpx;
+      }
+      .found {
+        &.selected {
+          background: @foundColor;
+        }
+      }
+    }
     .mask {
       display: none;
       width: 100%;
@@ -67,7 +105,7 @@
     <view class="header">
       <i class="iconfont icon-menu menu" @tap="handleShowLeftMenu"></i>
       <van-search value="{{ value }}" placeholder="请输入搜索关键词" class="search"/>
-      <i class="iconfont icon-filter-fill filter"></i>
+      <i class="iconfont filter {{showMapFilter ? 'icon-close' : 'icon-filter-fill'}}" @tap="handleToggleMapFilter"></i>
     </view>
 
     <view class="map" style="{{showLeftMenu ? 'margin-left: 50%' : ''}}">
@@ -89,6 +127,10 @@
           <cover-view class="toggle-btn" @tap="handleToggleAction">
             {{isActive ? 'x' : '+'}}
           </cover-view>
+        </cover-view>
+        <cover-view class="filter {{showMapFilter ? 'active' : ''}}" @tap="toggleSelectedFilter">
+          <cover-view class="lost {{selectedFilter.lost ? 'selected' : ''}}" id="lost">LOST</cover-view>
+          <cover-view class="found {{selectedFilter.found ? 'selected' : ''}}" id="found">FOUND</cover-view>
         </cover-view>
         <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}" @tap="handleCloseLeftMenu"></cover-view>
       </map>
@@ -129,9 +171,15 @@
     data = {
       isActive: false,
       markers: [],
+      _markers: [],
       targetPOI: null,
       showCard: false,
-      showLeftMenu: false
+      showLeftMenu: false,
+      showMapFilter: false,
+      selectedFilter: {
+        lost: true,
+        found: true
+      }
     }
 
     methods = {
@@ -161,11 +209,24 @@
       },
       handleCloseLeftMenu() {
         this.showLeftMenu = false
+      },
+      handleToggleMapFilter() {
+        this.showMapFilter = !this.showMapFilter
+      },
+      toggleSelectedFilter(e) {
+        if (!e.target.id) return
+        // TODO: 筛选逻辑
+        if (e.target.id === 'lost') {
+          this.selectedFilter.lost = !this.selectedFilter.lost
+        } else {
+          this.selectedFilter.found = !this.selectedFilter.found
+        }
       }
     }
 
     onLoad() {
       this.markers = this.$parent.globalData.mapData
+      this._markers = [...this.markers]
     }
   }
 </script>
