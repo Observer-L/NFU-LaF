@@ -9,7 +9,8 @@ module.exports.map = {
           itemDetail: {
             name: '8GB金士顿U盘一块',
             color: '红色',
-            time: '2019-02-06',
+            time: '1549000840000',
+            reportedTime: '1549080840000',
             place: '图书馆',
             desc: '三天前晚上在图书馆五楼丢失',
             pics: [
@@ -27,7 +28,8 @@ module.exports.map = {
           itemDetail: {
             name: 'airpods',
             color: '白色',
-            time: '2019-01-28',
+            time: '1539800840000',
+            reportedTime: '1539900840000',
             place: '中饭',
             desc: '',
             pics: [
@@ -48,7 +50,8 @@ module.exports.map = {
           itemDetail: {
             name: '商学院张倩的校园卡',
             color: '白色',
-            time: '2019-02-08',
+            time: '1549800820000',
+            reportedTime: '1549800920000',
             place: '西饭',
             desc: '中午在西饭一楼炒饭处找到',
             pics: [

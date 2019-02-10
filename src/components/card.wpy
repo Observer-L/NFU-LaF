@@ -6,8 +6,8 @@
         <text>{{info.type}}</text>
       </view>
       <view class="item_reported_time">
-        <text class="item_reported_time_prefix">Reported:</text>
-        <text>1 week ago</text>
+        <text class="item_reported_time_prefix">发布时间：</text>
+        <text>{{info.itemDetail.reportedTime}}</text>
       </view>
     </view>
   </view>
@@ -19,8 +19,8 @@
   >
     <view slot="desc" class="details">
       <view class="detail detail_time">
-        <view class="prefix">丢失时间：</view>
-        <view class="time">{{info.itemDetail.time}}</view>
+        <view class="prefix">{{info.type === 'LOST' ? '丢失时间' : '拾到时间'}}：</view>
+        <view class="time">{{info.itemDetail.fullTime}}</view>
       </view>
       <view class="detail detail_desc">
         <view class="prefix">更多信息：</view>
@@ -33,6 +33,7 @@
 
 <script>
 import wepy from 'wepy'
+
 export default class Card extends wepy.component {
   props = {
     info: Object
@@ -108,7 +109,6 @@ export default class Card extends wepy.component {
         .item_reported_time_prefix {
           font-size: 80%;
           color: #aaa;
-          margin-right: 6px;
         }
       }
     }

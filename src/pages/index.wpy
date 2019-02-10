@@ -171,7 +171,6 @@
     data = {
       isActive: false,
       markers: [],
-      _markers: [],
       targetPOI: null,
       showCard: false,
       showLeftMenu: false,
@@ -179,7 +178,9 @@
       selectedFilter: {
         lost: true,
         found: true
-      }
+      },
+      lostMarkers: [],
+      foundMarkers: []
     }
 
     methods = {
@@ -215,18 +216,41 @@
       },
       toggleSelectedFilter(e) {
         if (!e.target.id) return
-        // TODO: 筛选逻辑
         if (e.target.id === 'lost') {
           this.selectedFilter.lost = !this.selectedFilter.lost
+          if (!this.selectedFilter.lost) {
+            this.markers = this.foundMarkers
+          } else {
+            this.markers = this.markers.concat(this.lostMarkers)
+          }
+
+          if (!this.selectedFilter.lost && !this.selectedFilter.found) {
+            this.markers = []
+          }
         } else {
           this.selectedFilter.found = !this.selectedFilter.found
+          if (!this.selectedFilter.found) {
+            this.markers = this.lostMarkers
+          } else {
+            this.markers = this.markers.concat(this.foundMarkers)
+          }
+          if (!this.selectedFilter.lost && !this.selectedFilter.found) {
+            this.markers = []
+          }
         }
       }
     }
 
     onLoad() {
       this.markers = this.$parent.globalData.mapData
-      this._markers = [...this.markers]
+
+      for (let i = 0; i < this.markers.length; i++) {
+        if (this.markers[i].type === 'LOST') {
+          this.lostMarkers.push(this.markers[i])
+        } else {
+          this.foundMarkers.push(this.markers[i])
+        }
+      }
     }
   }
 </script>

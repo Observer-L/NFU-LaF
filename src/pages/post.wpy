@@ -49,6 +49,14 @@
         </view>
       </van-field>
       <van-field
+        value="{{ time }}"
+        label="事发时间"
+        placeholder="请选择事发时间"
+        @tap="handleShowDatetimePicker"
+        readonly="{{true}}"
+        left-icon="clock-o"
+      />
+      <van-field
         value="{{ location }}"
         label="定位"
         placeholder="请定位经纬度"
@@ -56,7 +64,6 @@
         readonly="{{true}}"
         left-icon="location-o"
       />
-
       <van-field
         value="{{ area.length ? area[0] + ' ' + area[1] : null }}"
         label="丢失区域"
@@ -110,7 +117,16 @@
         bind:cancel="handleCancelArea"
       />
     </van-popup>
-
+    <van-popup show="{{ popupDatetimePicker }}" @close="handleDatetimePickerClose" position="bottom" overlay="{{true}}">
+      <van-datetime-picker
+        type="datetime"
+        title="选择事发时间"
+        value="{{ currentDate }}"
+        min-date="{{ minDate }}"
+        max-date="{{ maxDate }}"
+        @input="handleChangeDate"
+      />
+    </van-popup>
     <van-button size="large" type="primary" loading="{{isLoading}}" @tap="handleSubmit">发布</van-button>
 
     <van-toast id="van-toast"/>
@@ -119,7 +135,9 @@
 
 <script>
   import wepy from 'wepy'
+  import Http from '@/utils/http'
   import Toast from '../components/vant/toast/toast'
+  import {format2RelativeTime} from '../utils/format_time'
 
   const areas = {
     '西区': ['西饭', '商业街', '西操', '西体', '其他'],
@@ -146,7 +164,8 @@
         'van-picker': '../components/vant/picker/index',
         'van-popup': '../components/vant/popup/index',
         'van-button': '../components/vant/button/index',
-        'van-toast': '../components/vant/toast/index'
+        'van-toast': '../components/vant/toast/index',
+        'van-datetime-picker': '../components/vant/datetime-picker/index'
       }
     }
 
@@ -183,7 +202,14 @@
       itemType: [],
       _itemType: [],
       moreDetail: '',
-      pics: []
+      pics: [],
+      popupDatetimePicker: false,
+      minHour: 10,
+      maxHour: 20,
+      minDate: new Date(2018, 5, 1).getTime(),
+      maxDate: new Date().getTime(),
+      currentDate: new Date().getTime(),
+      time: null
     }
 
     methods = {
@@ -278,6 +304,37 @@
             self.$apply()
           }
         })
+      },
+      handleChangeDate(e) {
+        const dateTime = e.detail
+
+      },
+      handleDatetimePickerClose() {
+        this.popupDatetimePicker = false
+      },
+      handleShowDatetimePicker() {
+        this.popupDatetimePicker = true
+      },
+      async handleSubmit() {
+        if (this.itemType.length && this.area.length && this.location && this.moreDetail && this.pics.length) {
+          this.isLoading = true
+          console.log(this.itemType)
+          const resp = await Http.Post('item', {
+            type: this.postType === '丢失' ? 'lost' : 'found',
+            itemType: this.itemType,
+            // itemName: this.itemName,
+            coord: this.location,
+            desc: this.moreDetail,
+            pics: this.pics,
+            date: new Date(),
+            place: this.area
+          })
+          console.log(resp)
+          this.isLoading = false
+          this.$apply()
+        } else {
+          Toast.fail('请填写完表单')
+        }
       }
     }
 

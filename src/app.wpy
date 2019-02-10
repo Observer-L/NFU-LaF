@@ -8,14 +8,16 @@
   import db from './utils/db'
   import Login from './utils/login'
   import {map} from './markers'
+  import {format2FullTime, format2RelativeTime} from './utils/format_time'
+
   export default class extends wepy.app {
     config = {
       pages: [
         'pages/index',
+        'pages/post',
         'pages/detail',
         'pages/privacy',
         'pages/contact',
-        'pages/post',
         'pages/history',
         'pages/my',
         'pages/corner'
@@ -84,6 +86,9 @@
             color: '#000000',
             fontSize: 16
           }
+          POI.itemDetail.fullTime = format2RelativeTime(POI.itemDetail.time) + `（${format2FullTime(POI.itemDetail.time)}）`
+          POI.itemDetail.time = format2RelativeTime(POI.itemDetail.time)
+          POI.itemDetail.reportedTime = format2RelativeTime(POI.itemDetail.reportedTime)
           this.globalData.mapData.push(POI)
         }
       }
