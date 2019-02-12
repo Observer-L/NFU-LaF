@@ -49,7 +49,7 @@
         </view>
       </van-field>
       <van-field
-        value="{{ time }}"
+        value="{{ _time }}"
         label="事发时间"
         placeholder="请选择事发时间"
         @tap="handleShowDatetimePicker"
@@ -120,6 +120,7 @@
     <van-popup show="{{ popupDatetimePicker }}" @close="handleDatetimePickerClose" position="bottom" overlay="{{true}}">
       <van-datetime-picker
         type="datetime"
+        show-toolbar="{{false}}"
         title="选择事发时间"
         value="{{ currentDate }}"
         min-date="{{ minDate }}"
@@ -137,7 +138,7 @@
   import wepy from 'wepy'
   import Http from '@/utils/http'
   import Toast from '../components/vant/toast/toast'
-  import {format2RelativeTime} from '../utils/format_time'
+  import {format2FullTime} from '../utils/format_time'
 
   const areas = {
     '西区': ['西饭', '商业街', '西操', '西体', '其他'],
@@ -209,7 +210,8 @@
       minDate: new Date(2018, 5, 1).getTime(),
       maxDate: new Date().getTime(),
       currentDate: new Date().getTime(),
-      time: null
+      time: null,
+      _time: null
     }
 
     methods = {
@@ -306,8 +308,8 @@
         })
       },
       handleChangeDate(e) {
-        const dateTime = e.detail
-
+        this.time = e.detail
+        this._time = format2FullTime(e.detail)
       },
       handleDatetimePickerClose() {
         this.popupDatetimePicker = false
@@ -316,7 +318,7 @@
         this.popupDatetimePicker = true
       },
       async handleSubmit() {
-        if (this.itemType.length && this.area.length && this.location && this.moreDetail && this.pics.length) {
+        if (this.itemType.length && this.area.length && this.location && this.moreDetail && this.pics.length && this.time) {
           this.isLoading = true
           console.log(this.itemType)
           const resp = await Http.Post('item', {
@@ -326,7 +328,7 @@
             coord: this.location,
             desc: this.moreDetail,
             pics: this.pics,
-            date: new Date(),
+            time: this.time,
             place: this.area
           })
           console.log(resp)
