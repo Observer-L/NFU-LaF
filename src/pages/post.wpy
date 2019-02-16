@@ -1,135 +1,502 @@
 <style lang="less">
-  @rectSize: 160rpx;
-  @marginR: 20rpx;
-  .pics {
-    display: flex;
-    padding: 0 40rpx 40rpx 40rpx;
-    background: #fff;
-    .add {
-      width: @rectSize;
-      height: @rectSize;
-      margin-right: @marginR;
-      line-height: @rectSize;
-      font-size: 30px;
-      text-align: center;
-      background: #d8d8d8;
+  @import "../style/custom";
+
+  @keyframes scanning {
+    0% {
+      transform: translateY(-100%);
     }
-    .pic {
-      width: @rectSize;
-      height: @rectSize;
-      &:not(:last-child) {
-        margin-right: @marginR;
+    1% {
+      transform: translateY(-100%) scaleY(1);
+    }
+    99% {
+      transform: translateY(100%) scaleY(1);
+    }
+    100% {
+      transform: translateY(100%) scaleY(-1);
+    }
+  }
+
+  .van-popup--bottom {
+    z-index: 101 !important;
+  }
+
+  .step {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .footer {
+    position: absolute;
+    width: 100%;
+    bottom: 56rpx;
+    z-index:100;
+    .progress {
+      display: block;
+      margin: 0 auto;
+      width: 90%;
+    }
+  }
+
+  .area_wrapper {
+    display: flex;
+    position: absolute;
+    top: 300rpx;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+    justify-content: center;
+    font-size: 46rpx;
+    background: #eee;
+    padding: 20rpx;
+
+    .placeholder {
+      font-size: 70%;
+      color: #aaa;
+      border-bottom: 1px solid #000;
+    }
+  }
+
+  .results {
+    padding: 20rpx;
+
+    .slider-wrapper {
+      .slider {
+        align-items: center;
       }
+
+      van-slider {
+        flex: 2;
+      }
+    }
+  }
+
+  .reset-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 120rpx;
+    height: 120rpx;
+    margin: 0 8rpx 8rpx 0;
+    background: #000;
+    color: #fff;
+    line-height: 120rpx;
+    text-align: center;
+  }
+
+  .item-detail {
+    align-items: center;
+  }
+
+  .mask {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .5);
+  }
+
+  .title {
+    font-size: 16px;
+    padding: 26rpx;
+  }
+
+  .upload-wrapper {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 438rpx;
+    width: 94vw;
+    margin: 3vw;
+
+    .card-wrapper {
+      width: 100%;
+      height: 100%;
+
+      .placeholder {
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        top: 50%;
+        font-size: 24px;
+        color: #aaa;
+      }
+
+      .scan-mask {
+        position: absolute;
+        z-index: 101;
+        width: 100%;
+        transform: translateY(-100%);
+
+        &.scanning {
+          transform: translateY(100%);
+          animation: scanning 2s cubic-bezier(0.15, 0.44, 0.76, 0.64);
+          animation-iteration-count: infinite;
+        }
+      }
+
+      .scan-frame {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+      }
+
+      .card {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        padding: 20rpx;
+        box-sizing: border-box;
+      }
+    }
+
+    .upload-pics {
+      display: flex;
+
+      .upload-btn {
+        background: #f8f8f8;
+        text-align: center;
+        line-height: 160rpx;
+        font-size: 32px;
+        color: rgba(0, 0, 0, .6);
+        margin-right: 20rpx;
+      }
+
+      .upload-btn, .pic {
+        width: 160rpx;
+        height: 160rpx;
+      }
+
+      .pic:not(:last-child) {
+        margin-right: 20rpx;
+      }
+    }
+  }
+
+  .declare {
+    font-size: 12px;
+    color: #aaa;
+    margin: 16rpx 40rpx;
+    padding: 20rpx;
+
+    .target {
+      &.lost {
+        color: @lostColor;
+      }
+
+      &.found {
+        color: @foundColor;
+      }
+    }
+  }
+
+  .form-cell {
+    transition: all .3s ease;
+
+    &.err {
+      box-shadow: 0 0 10px tomato;
+    }
+  }
+
+  .body {
+    .btn {
+      position: absolute;
+      width: 120rpx;
+      height: 120rpx;
+      line-height: 120rpx;
+      bottom: 120rpx;
+    }
+    .next-btn {
+      right: 0;
+    }
+    .back-btn {
+      left: 0;
     }
   }
 </style>
 <template>
   <view>
-    <view class="header">
-      <h1>我{{postType}}了东西！</h1>
-    </view>
-
-    <van-cell-group>
-      <van-field
-        value="{{ itemType.length ? itemType[0] + ' ' + itemType[1] : null }}"
-        label="物品类型"
-        placeholder="请选择物品类型"
-        @tap="handleChooseItemType"
-        left-icon="newspaper-o"
-        use-button-slot
-        readonly="{{true}}"
+    <view class="body">
+      <map
+        id="map"
+        longitude="{{locationOptions.location ? locationOptions.location[1] : '113.679142'}}"
+        latitude="{{locationOptions.location ? locationOptions.location[0] : '23.632573'}}"
+        scale="17"
+        markers="{{markers}}"
+        circles="{{circles}}"
+        bindmarkertap="markertap"
+        polyline="{{polyline}}"
+        show-location
+        enable-rotate="{{true}}"
+        enable-3D="{{true}}"
+        style="width:100%;height:{{locationOptions.location ? '50vh' : '90vh'}}; {{ showMap ? '' : 'display:none'}}"
       >
-        <view slot="button" wx:if="{{itemType[0] === '其他'}}">
+        <cover-view class="reset-btn" style="{{!locationOptions.location ? 'display:none;' : ''}}"
+                    @tap="selectLocation">
+          重选
+        </cover-view>
+        <cover-view
+          class="{{ showMapMask ? 'mask' : ''}}"
+          @tap="{{locationOptions.popupAreaPicker ? 'handleAreaPickerClose' : ''}}"
+        ></cover-view>
+      </map>
+      <cover-view class="area_wrapper" style="display: {{locationOptions.location ? 'none' : 'flex'}}">
+        <cover-view class="title">在哪里{{postType === 'lost' ? '丢失' : '捡到'}}的？</cover-view>
+        <cover-view class="placeholder" @tap="selectLocation">{{locationOptions.location ? locationOptions.location :
+          '请选择事发地点'}}
+        </cover-view>
+      </cover-view>
+
+      <view class="results" style="{{!locationOptions.location ? 'display:none' : ''}}">
+        <view class="slider-wrapper">
+          <van-cell title="丢失范围" custom-class="slider" icon="aim">
+            <van-slider
+              slot="right-icon"
+              class="van-cell__right-icon"
+              value="{{circles[0].radius}}"
+              @drag="handleChangeMapCircleRadius"/>
+          </van-cell>
+        </view>
+        <view class="area">
+          <van-cell
+            title="丢失区域"
+            value="{{ locationOptions.area.length ? locationOptions.area[0] + ' ' + locationOptions.area[1] : '请选择丢失区域' }}"
+            icon="location-o"
+            @tap="handleChooseArea"
+            is-link
+            custom-class="{{err.location ? 'err' : ''}} form-cell"
+            arrow-direction="{{locationOptions.popupAreaPicker ? 'up' : 'down'}}"
+          />
+          <van-popup show="{{ locationOptions.popupAreaPicker }}" @close="handleAreaPickerClose" position="bottom"
+                     overlay="{{true}}">
+            <van-picker
+              title="选择区域"
+              columns="{{ locationOptions.columns }}"
+              @change="handleChangeArea"
+            />
+          </van-popup>
+        </view>
+        <van-button size="large" id="sn1" @tap="showNext" custom-class="btn next-btn">》</van-button>
+      </view>
+
+
+      <van-popup
+        show="{{ showStep2 }}"
+        position="right"
+        overlay="{{ false }}"
+        custom-class="step"
+      >
+
+        <van-cell
+          title="物品类型"
+          custom-class="item-detail"
+          icon="newspaper-o"
+          arrow-direction="down"
+          border="{{ false }}"
+          @tap="handleChooseItemType"
+          value="{{itemTypeOptions.itemType.length ? itemTypeOptions.itemType : '请选择物品类型'}}"
+        >
           <van-field
-            value="{{ value }}"
+            wx:if="{{itemTypeOptions.itemType[0] === '其他'}}"
+            slot="right-icon"
+            value="{{ itemTypeOptions.customItemType }}"
             placeholder="请输入物品类型"
+            maxlength="10"
+            id="item-custom-type"
+            @input="handleInputItemDetails"
+            focus="{{itemTypeOptions.itemTypeInputFocus}}"
+          />
+        </van-cell>
+
+        <view class="upload-wrapper" style="height: {{itemTypeOptions.itemType[0] === '卡片/证件' ? '438rpx' : 'auto'}}">
+          <!--TODO:智能扫描-->
+          <view class="upload-pics" wx:if="{{itemTypeOptions.itemType[0] !== '卡片/证件'}}">
+            <block wx:if="{{itemTypeOptions.itemType.length}}">
+              <view class="upload-btn" @tap="handleAddPics">+</view>
+              <image wx:for="{{details.pics}}" src="{{item}}" class="pic" wx:key="{{index}}"></image>
+            </block>
+          </view>
+          <view class="card-wrapper" wx:else @tap="handleUploadCard">
+            <text class="placeholder">智能扫描</text>
+            <image src="../images/scan-mask.png" class="scan-mask {{scanning ? 'scanning' : ''}}"></image>
+            <image src="../images/scan.png" class="scan-frame"></image>
+            <image src="{{details.cardPic}}" class="card"></image>
+          </view>
+        </view>
+
+        <view class="item-details" wx:if="{{itemTypeOptions.itemType[0] !== '卡片/证件'}}">
+          <block wx:if="{{itemTypeOptions.itemType.length}}">
+            <view class="title">物品的更多信息（可选）</view>
+            <van-field
+              value="{{details.color}}"
+              label="物品颜色"
+              placeholder="请输入物品颜色"
+              border="{{ false }}"
+              left-icon="brush-o"
+              id="item-color"
+              @input="handleInputItemDetails"
+            />
+            <van-field
+              value="{{details.brand}}"
+              label="物品品牌"
+              placeholder="请输入物品品牌"
+              border="{{ false }}"
+              left-icon="send-gift-o"
+              id="item-brand"
+              @input="handleInputItemDetails"
+            />
+            <van-field
+              value="{{details.desc}}"
+              label="更多说明"
+              placeholder="请输入更多说明"
+              border="{{ false }}"
+              left-icon="more-o"
+              id="item-desc"
+              maxlength="140"
+              clearable="{{true}}"
+              @input="handleInputItemDetails"
+              @clear="handleClearDesc"
+            />
+          </block>
+        </view>
+        <view class="item-details card" wx:else>
+          <van-field
+            value="{{details.ownerName}}"
+            label="姓名"
+            left-icon="contact"
+            placeholder="{{cardDetails.name ? 'cardDetails.id' : '请输入姓名'}}"
             border="{{ false }}"
-            bind:change="onChange"
+            id="item-card-name"
+            @input="handleInputItemDetails"
+          />
+          <van-field
+            value="{{details.cardId}}"
+            label="卡号"
+            type="number"
+            left-icon="idcard"
+            placeholder="{{cardDetails.id ? 'cardDetails.id' : '请输入卡号'}}"
+            border="{{ false }}"
+            id="item-card-id"
+            @input="handleInputItemDetails"
           />
         </view>
-      </van-field>
-      <van-field
-        value="{{ _time }}"
-        label="事发时间"
-        placeholder="请选择事发时间"
-        @tap="handleShowDatetimePicker"
-        readonly="{{true}}"
-        left-icon="clock-o"
-      />
-      <van-field
-        value="{{ location }}"
-        label="定位"
-        placeholder="请定位经纬度"
-        @tap="chooseLocation"
-        readonly="{{true}}"
-        left-icon="location-o"
-      />
-      <van-field
-        value="{{ area.length ? area[0] + ' ' + area[1] : null }}"
-        label="丢失区域"
-        placeholder="请选择丢失区域"
-        @tap="handleChooseArea"
-        readonly="{{true}}"
-        left-icon="location-o"
-      />
-      <van-field
-        value="{{ moreDetail }}"
-        label="文字描述"
-        type="textarea"
-        placeholder="请提供更多信息"
-        autosize
-        clearable="{{true}}"
-        maxlength="140"
-        @input="handleMoreDetailInput"
-        @clear="handleClearMoreDetail"
-        left-icon="records"
-      />
-      <van-cell
-        title="图片"
-        value="内容"
-        icon="photo-o"
-        label="智能识别功能TODO"
-        border="{{ false }}"
-      />
-      <view class="pics">
-        <view class="add" @tap="handleAddPics">+</view>
-        <image wx:for="{{pics}}" src="{{item}}" class="pic" wx:key="{{index}}"></image>
-      </view>
-    </van-cell-group>
 
-    <van-popup show="{{ popupItemTypePicker }}" @close="handleItemTypePickerClose" position="bottom" overlay="{{true}}">
+        <view class="declare van-hairline--top">
+          为保护失主隐私，应用将会自动将必要的敏感信息（卡号，照片等）进行模糊处理。
+          您可以在个人中心修改隐私设置。
+        </view>
+        <van-button size="large" id="sn2" @tap="showNext" custom-class="btn next-btn">》</van-button>
+        <van-button size="large" id="sb1" @tap="showBack" custom-class="btn back-btn">《</van-button>
+      </van-popup>
+
+      <van-popup
+        show="{{ showStep3 }}"
+        position="right"
+        overlay="{{ false }}"
+        custom-class="step"
+      >
+        <van-field
+          value="{{ datetimeOptions._time }}"
+          label="事发时间"
+          placeholder="请选择事发时间"
+          @tap="handleShowDatetimePicker"
+          readonly="{{true}}"
+          left-icon="clock-o"
+        />
+        <van-button size="large" id="sn3" @tap="showNext" custom-class="btn next-btn">》</van-button>
+        <van-button size="large" id="sb3" @tap="showBack" custom-class="btn back-btn">《</van-button>
+      </van-popup>
+
+      <van-popup
+        show="{{ showStep4 }}"
+        position="right"
+        overlay="{{ false }}"
+        custom-class="step"
+      >
+        <view class="contact-wrapper">
+
+          <view class="normal" wx:if="{{normalContact}}">
+            <van-field
+              label="联系电话"
+              required="{{true}}"
+              type="number"
+              id="contact-phone"
+              border="{{ false }}"
+              left-icon="phone-o"
+              value="{{ contact.phone }}"
+              placeholder="请输入联系电话"
+              @input="handleContactInput"
+            />
+            <van-field
+              wx:if="userInfo.wechat"
+              label="微信号"
+              id="contact-wechat"
+              left-icon="friends-o"
+              border="{{ false }}"
+              value="{{ contact.wechat }}"
+              placeholder="请输入微信号"
+              @input="handleContactInput"
+            />
+            <view class="declare van-hairline--top">
+              不方便留下个人联系信息？您还可以
+              <span @tap="handleSwitchContact" id="custom" class="target {{postType === 'lost' ? 'lost' : 'found'}}">指定领取地点</span>
+              。
+            </view>
+          </view>
+          <view class="custom" wx:else>
+
+            <van-field
+              label="领取地点"
+              id="contact-point"
+              left-icon="location-o"
+              value="{{ contact.point }}"
+              border="{{ false }}"
+              placeholder="请指定领取地点"
+              @input="handleContactInput"
+            />
+
+            <view class="declare van-hairline--top">
+              您还可以选择
+              <span @tap="handleSwitchContact" id="normal" class="target {{postType === 'lost' ? 'lost' : 'found'}}">普通联系方式</span>
+              。
+            </view>
+          </view>
+          <van-button size="large" type="primary" loading="{{loading}}" @tap="handleSubmit">发布</van-button>
+
+        </view>
+        <van-button size="large" id="sb4" @tap="showBack" custom-class="btn back-btn">《</van-button>
+      </van-popup>
+
+    </view>
+
+    <view class="footer">
+      <van-progress
+        color="linear-gradient(to right, #be99ff, #7232dd)"
+        percentage="{{percentage}}"
+        custom-class="progress {{location ? 'active' : ''}}"/>
+    </view>
+
+    <van-popup show="{{ itemTypeOptions.popupItemTypePicker }}" @close="handleItemTypePickerClose" position="bottom"
+               overlay="{{true}}">
       <van-picker
         title="选择物品类型"
-        show-toolbar="{{true}}"
-        columns="{{ itemTypeColumns }}"
+        columns="{{ itemTypeOptions.columns }}"
         bind:change="handleChangeItemType"
-        bind:confirm="handleConfirmItemType"
-        bind:cancel="handleCancelItemType"
       />
     </van-popup>
-    <van-popup show="{{ popupAreaPicker }}" @close="handleAreaPickerClose" position="bottom" overlay="{{true}}">
-      <van-picker
-        title="选择区域"
-        show-toolbar="{{true}}"
-        columns="{{ areaColumns }}"
-        bind:change="handleChangeArea"
-        bind:confirm="handleConfirmArea"
-        bind:cancel="handleCancelArea"
-      />
-    </van-popup>
-    <van-popup show="{{ popupDatetimePicker }}" @close="handleDatetimePickerClose" position="bottom" overlay="{{true}}">
+    <van-popup show="{{ datetimeOptions.popupDatetimePicker }}" @close="handleDatetimePickerClose" position="bottom"
+               overlay="{{true}}">
       <van-datetime-picker
         type="datetime"
         show-toolbar="{{false}}"
         title="选择事发时间"
-        value="{{ currentDate }}"
-        min-date="{{ minDate }}"
-        max-date="{{ maxDate }}"
+        value="{{ datetimeOptions.currentDate }}"
+        min-date="{{ datetimeOptions.minDate }}"
+        max-date="{{ datetimeOptions.maxDate }}"
         @input="handleChangeDate"
       />
     </van-popup>
-    <van-button size="large" type="primary" loading="{{isLoading}}" @tap="handleSubmit">发布</van-button>
-
     <van-toast id="van-toast"/>
   </view>
 </template>
@@ -138,7 +505,7 @@
   import wepy from 'wepy'
   import Http from '@/utils/http'
   import Toast from '../components/vant/toast/toast'
-  import {format2FullTime} from '../utils/format_time'
+  import { format2FullTime } from '../utils/format_time'
 
   const areas = {
     '西区': ['西饭', '商业街', '西操', '西体', '其他'],
@@ -148,7 +515,7 @@
   }
 
   const itemType = {
-    '卡片/证件': ['校园卡（饭卡）', '身份证', '银行卡', '羊城通', '其他'],
+    '卡片/证件': ['校园卡', '身份证', '银行卡', '羊城通', '其他'],
     '数码产品': ['U盘', '耳机', '手机', '鼠标', '其他'],
     '学习用品': ['书本', '笔', '体育馆', '其他'],
     '生活用品': ['水杯', '帽子', '其他'],
@@ -158,6 +525,7 @@
   export default class Post extends wepy.page {
     config = {
       navigationBarTitleText: '发布',
+      disableScroll: true,
       usingComponents: {
         'van-field': '../components/vant/field/index',
         'van-cell': '../components/vant/cell/index',
@@ -166,133 +534,282 @@
         'van-popup': '../components/vant/popup/index',
         'van-button': '../components/vant/button/index',
         'van-toast': '../components/vant/toast/index',
-        'van-datetime-picker': '../components/vant/datetime-picker/index'
+        'van-datetime-picker': '../components/vant/datetime-picker/index',
+        'van-progress': '../components/vant/progress/index',
+        'van-slider': '../components/vant/slider/index'
       }
     }
 
     data = {
       postType: '',
-      areaColumns: [
-        {
-          values: Object.keys(areas),
-          className: 'column1'
-        },
-        {
-          values: Object.values(areas)[0],
-          className: 'column2',
-          defaultIndex: Math.floor(Object.values(areas)[0].length / 2)
-        }
-      ],
-      itemTypeColumns: [
-        {
-          values: Object.keys(itemType),
-          className: 'column1'
-        },
-        {
-          values: Object.values(itemType)[0],
-          className: 'column2',
-          defaultIndex: Math.floor(Object.values(itemType)[0].length / 2)
-        }
-      ],
-      location: '',
-      isLoading: false,
-      popupItemTypePicker: false,
-      popupAreaPicker: false,
-      area: [],
-      _area: [],
-      itemType: [],
-      _itemType: [],
-      moreDetail: '',
-      pics: [],
-      popupDatetimePicker: false,
-      minHour: 10,
-      maxHour: 20,
-      minDate: new Date(2018, 5, 1).getTime(),
-      maxDate: new Date().getTime(),
-      currentDate: new Date().getTime(),
-      time: null,
-      _time: null
+      percentage: 0,
+      showStep1: true,
+      showStep2: false,
+      showStep3: false,
+      showStep4: false,
+      showMap: true,
+      showMapMask: true,
+      markers: [{
+        width: 36,
+        height: 36
+      }],
+      circles: [{
+        radius: 30,
+        strokeWidth: 1
+      }],
+      locationOptions: {
+        area: [],
+        radius: 10,
+        location: '',
+        columns: [
+          {
+            values: Object.keys(areas),
+            className: 'column1'
+          },
+          {
+            values: Object.values(areas)[0],
+            className: 'column2',
+            defaultIndex: Math.floor(Object.values(areas)[0].length / 2)
+          }
+        ],
+        popupAreaPicker: false
+      },
+      itemTypeOptions: {
+        columns: [
+          {
+            values: Object.keys(itemType),
+            className: 'column1'
+          },
+          {
+            values: Object.values(itemType)[0],
+            className: 'column2',
+            defaultIndex: Math.floor(Object.values(itemType)[0].length / 2)
+          }
+        ],
+        itemType: [],
+        customItemType: null,
+        popupItemTypePicker: false,
+        itemTypeInputFocus: false
+      },
+      datetimeOptions: {
+        popupDatetimePicker: false,
+        minHour: 10,
+        maxHour: 20,
+        minDate: new Date(2018, 5, 1).getTime(),
+        maxDate: new Date().getTime(),
+        currentDate: new Date().getTime(),
+        time: null,
+        _time: null
+      },
+      details: {
+        cardPic: [],
+        cardId: null,
+        ownerName: null,
+        pics: [],
+        color: '',
+        brand: '',
+        desc: ''
+      },
+      contact: {},
+      err: {
+        location: false
+      },
+      normalContact: true,
+      scanning: false,
+      loading: false
     }
 
     methods = {
+      handleSwitchContact(e) {
+        if (e.target.id === 'custom') {
+          this.normalContact = false
+        } else {
+          this.normalContact = true
+        }
+      },
+      showNext(e) {
+        const self = this
+        switch (e.target.id) {
+          case 'sn1':
+            if (!this.locationOptions.area.length) {
+              // Toast('请填写完表单')
+              self.err.location = true
+              setTimeout(() => {
+                self.err.location = false
+                self.$apply()
+              }, 1500)
+              return
+            }
+            this.showMap = false
+            this.showStep2 = true
+            break
+          case 'sn2':
+            const isCardMode = this.itemTypeOptions.itemType[0] === '卡片/证件'
+            console.log(this.details.cardPic.length, this.details.ownerName, this.details.cardId)
+            if (isCardMode) {
+              if (!(this.details.cardPic.length && this.details.ownerName && this.details.cardId)) {
+                Toast.fail('请填写完表单1')
+                return
+              }
+            } else if (!this.details.pics.length) {
+              Toast.fail('请填写完表单2')
+              return
+            }
+            this.showStep3 = true
+            break
+          case 'sn3':
+            this.showStep4 = true
+            break
+        }
+        this.percentage += 25
+      },
+      showBack(e) {
+        switch (e.target.id) {
+          case 'sb1':
+            this.showMap = true
+            this.showMapMask = false
+            this.showStep2 = false
+            break
+          case 'sb2':
+            this.showStep2 = false
+            break
+          case 'sb3':
+            this.showStep3 = false
+            break
+          case 'sb4':
+            this.showStep4 = false
+            break
+        }
+        this.percentage -= 25
+      },
+      selectLocation() {
+        const self = this
+        wx.chooseLocation({
+          success(res) {
+            self.showMapMask = false
+            self.locationOptions.location = [res.latitude, res.longitude]
+            self.markers[0]['latitude'] = res.latitude
+            self.markers[0]['longitude'] = res.longitude
+            self.markers[0]['iconPath'] = `../images/icon/location${self.postType === 'lost' ? '.png' : '@found.png'}`
+            self.circles[0]['latitude'] = res.latitude
+            self.circles[0]['longitude'] = res.longitude
+            self.circles[0]['color'] = self.postType === 'lost' ? '#d81e0680' : '#1296db80'
+            self.circles[0]['fillColor'] = self.postType === 'lost' ? '#d81e0650' : '#1296db50'
+            self.percentage = 25
+            self.$apply()
+          }
+        })
+      },
+      handleChangeMapCircleRadius(e) {
+        this.locationOptions.radius = e.detail.value
+        this.circles[0].radius = e.detail.value
+      },
       handleChooseArea() {
-        this.popupAreaPicker = true
+        this.showMapMask = true
+        this.locationOptions.popupAreaPicker = true
       },
       handleAreaPickerClose() {
-        this._area = [...this.area]
-        this.popupAreaPicker = false
+        this.showMapMask = false
+        this.locationOptions.popupAreaPicker = false
+        const columns = this.locationOptions.columns
+        if (!this.locationOptions.area.length) {
+          this.locationOptions.area = [columns[0].values[0], columns[1].values[columns[1].defaultIndex]]
+        }
       },
       handleChangeArea(e) {
         switch (e.detail.index) {
           case 0:
-            this.areaColumns[1].values = areas[e.detail.value[0]]
-            this.area = [e.detail.value[0], this.areaColumns[1].values[0]]
+            this.locationOptions.columns[1].values = areas[e.detail.value[0]]
+            this.locationOptions.area = [e.detail.value[0], this.locationOptions.columns[1].values[0]]
             break
           case 1:
-            this.area = e.detail.value
+            this.locationOptions.area = e.detail.value
             break
           default:
-            this.area = ''
+            this.locationOptions.area = ''
         }
       },
-      handleConfirmArea(e) {
-        this.area = e.detail.value
-        this._area = [...this.area]
-        this.popupAreaPicker = false
-      },
-      handleCancelArea(e) {
-        this.area = this._area
-        this.popupAreaPicker = false
-      },
-      chooseLocation() {
-        const self = this
-        wx.chooseLocation({
-          success(res) {
-            console.log(res)
-            self.location = [res.latitude, res.longitude]
-          }
-        })
-      },
-      handleChooseItemType() {
-        this.popupItemTypePicker = true
+      handleChooseItemType(e) {
+        if (e.target.id !== 'item-type') {
+          this.itemTypeOptions.popupItemTypePicker = true
+        }
       },
       handleItemTypePickerClose() {
-        this._itemType = [...this.itemType]
-        this.popupItemTypePicker = false
+        this.itemTypeOptions.popupItemTypePicker = false
+        if (!this.itemTypeOptions.itemType.length) {
+          this.itemTypeOptions.itemType = [this.itemTypeOptions.columns[0].values[0], this.itemTypeOptions.columns[1].values[0]]
+        }
+        if (this.itemTypeOptions.itemType[0] === '其他') {
+          this.itemTypeOptions.itemTypeInputFocus = true
+        }
       },
       handleChangeItemType(e) {
         switch (e.detail.index) {
           case 0:
-            this.itemTypeColumns[1].values = itemType[e.detail.value[0]]
-            this.itemType = [e.detail.value[0], this.itemTypeColumns[1].values[0]]
+            this.itemTypeOptions.columns[1].values = itemType[e.detail.value[0]]
+            this.itemTypeOptions.itemType = [e.detail.value[0], this.itemTypeOptions.columns[1].values[0]]
             break
           case 1:
-            this.itemType = e.detail.value
+            this.itemTypeOptions.itemType = e.detail.value
             break
           default:
-            this.itemType = ''
+            this.itemTypeOptions.itemType = ''
         }
       },
-      handleConfirmItemType(e) {
-        this.itemType = e.detail.value
-        this._itemType = [...this.itemType]
-        this.popupItemTypePicker = false
+      handleUploadCard() {
+        const self = this
+        wx.chooseImage({
+          count: 1,
+          sizeType: ['original', 'compressed'],
+          sourceType: ['album', 'camera'],
+          success(res) {
+            // tempFilePath可以作为img标签的src属性显示图片
+            const tempFilePaths = res.tempFilePaths
+            self.details.cardPic = tempFilePaths
+            self.scanning = true
+            self.$apply()
+          }
+        })
       },
-      handleCancelItemType(e) {
-        this.itemType = this._itemType
-        this.popupItemTypePicker = false
+      handleInputItemDetails(e) {
+        switch (e.target.id) {
+          case 'item-custom-type':
+            this.itemTypeOptions.customItemType = e.detail
+            break
+          case 'item-color':
+            this.details.color = e.detail
+            break
+          case 'item-brand':
+            this.details.brand = e.detail
+            break
+          case 'item-desc':
+            this.details.desc = e.detail
+            break
+          case 'item-card-name':
+            this.details.ownerName = e.detail
+            break
+          case 'item-card-id':
+            this.details.cardId = e.detail
+            break
+        }
       },
-      handleMoreDetailInput(e) {
-        this.moreDetail = e.detail
+      handleContactInput(e) {
+        switch (e.target.id) {
+          case 'contact-phone':
+            this.contact.phone = e.detail
+            break
+          case 'contact-wechat':
+            this.contact.wechat = e.detail
+            break
+          case 'contact-point':
+            this.contact.point = e.detail
+            break
+        }
       },
-      handleClearMoreDetail() {
-        this.moreDetail = ''
+      handleClearDesc() {
+        this.details.desc = ''
       },
       handleAddPics() {
-        if (this.pics.length === 3) {
-          Toast('只能上传三张图片')
-          return
-        }
         const self = this
         wx.chooseImage({
           count: 3,
@@ -301,47 +818,63 @@
           success(res) {
             // tempFilePath可以作为img标签的src属性显示图片
             const tempFilePaths = res.tempFilePaths
-            self.pics = self.pics.concat(tempFilePaths)
-            console.log(self.pics)
+            self.details.pics = self.details.pics.concat(tempFilePaths)
+            console.log(self.details.pics)
             self.$apply()
           }
         })
       },
       handleChangeDate(e) {
-        this.time = e.detail
-        this._time = format2FullTime(e.detail)
+        this.datetimeOptions.time = e.detail
+        this.datetimeOptions._time = format2FullTime(e.detail)
       },
       handleDatetimePickerClose() {
-        this.popupDatetimePicker = false
+        this.datetimeOptions.popupDatetimePicker = false
       },
       handleShowDatetimePicker() {
-        this.popupDatetimePicker = true
+        this.datetimeOptions.popupDatetimePicker = true
       },
       async handleSubmit() {
-        if (this.itemType.length && this.area.length && this.location && this.moreDetail && this.pics.length && this.time) {
-          this.isLoading = true
-          console.log(this.itemType)
-          const resp = await Http.Post('item', {
-            type: this.postType === '丢失' ? 'lost' : 'found',
-            itemType: this.itemType,
-            // itemName: this.itemName,
-            coord: this.location,
-            desc: this.moreDetail,
-            pics: this.pics,
-            time: this.time,
-            place: this.area
-          })
-          console.log(resp)
-          this.isLoading = false
-          this.$apply()
-        } else {
-          Toast.fail('请填写完表单')
+        if (this.normalContact) {
+          console.log(this.contact)
+          if (!this.contact.phone) {
+            Toast.fail('请填写联系电话')
+            return
+          }
         }
+        this.loading = true
+        const self = this
+        const resp = await Http.Post('item', {
+          type: this.postType === 'lost' ? 'lost' : 'found',
+          itemType: this.itemTypeOptions.itemType,
+          // itemName: this.itemName,
+          coord: this.locationOptions.location,
+          desc: this.details.desc,
+          pics: this.itemTypeOptions.itemType[0] !== '卡片/证件' ? this.details.pics : this.details.cardPic,
+          time: this.datetimeOptions.time,
+          place: this.locationOptions.area,
+          contact: this.contact
+        }).then(() => {
+            self.loading = false
+            self.$apply()
+            Toast.success('发布成功')
+            setTimeout(() => {
+              wx.reLaunch({
+                url: './index',
+                success(res) {
+                  self.$parent._loadMapData()
+                }
+              })
+            }, 1500)
+          }
+        )
       }
     }
 
     onLoad(options) {
-      this.postType = options.type === 'lost' ? '丢失' : '捡到'
+      this.postType = options.type
+      const userInfo = this.$parent.globalData.userInfo
+      this.contact = userInfo
     }
   }
 </script>

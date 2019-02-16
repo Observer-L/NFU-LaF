@@ -1,5 +1,6 @@
 <style lang="less">
   @import "style/index";
+  @import "../src/components/vant/common/index.wxss";
 </style>
 
 <script>
@@ -7,8 +8,8 @@
   import 'wepy-async-function'
   import db from './utils/db'
   import Login from './utils/login'
-  import {map} from './markers'
-  import { format2FullTime, format2RelativeTime, formatRFC2822ToCalendar } from './utils/format_time';
+  import { map } from './markers'
+  import { format2FullTime, format2RelativeTime, formatRFC2822ToCalendar } from './utils/format_time'
   import Http from './utils/http'
 
   export default class extends wepy.app {
@@ -69,11 +70,14 @@
       new Login().getToken().then(() => {
         this.globalData.userInfo = db.Get('userInfo')
       })
-      // this.loadMapData()
       this._loadMapData()
+      // this.loadMapData()
     }
 
     async _loadMapData() {
+      this.globalData.mapData = []
+      this.globalData.lostMarkers = []
+      this.globalData.foundMarkers = []
       const resp = await Http.Get('items')
       const mapData = resp.data
       for (let i = 0; i < mapData.length; i++) {
@@ -101,7 +105,6 @@
       for (let i = 0; i < mapData.length; i++) {
         for (let j = 0; j < mapData[i].data.length; j++) {
           const POI = mapData[i].data[j]
-          // POI.id = j + 1
           POI.width = 36
           POI.height = 36
           POI.type = mapData[i].type
@@ -118,6 +121,5 @@
         }
       }
     }
-
   }
 </script>

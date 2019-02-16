@@ -132,17 +132,19 @@
           <cover-view class="lost {{selectedFilter.lost ? 'selected' : ''}}" id="lost">LOST</cover-view>
           <cover-view class="found {{selectedFilter.found ? 'selected' : ''}}" id="found">FOUND</cover-view>
         </cover-view>
-        <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}" @tap="handleCloseLeftMenu"></cover-view>
+        <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}"
+                    @tap="handleCloseLeftMenu"></cover-view>
       </map>
     </view>
 
     <view class="list">
-      <van-transition show="{{ showCard }}" class="card" name="fade-down" >
+      <van-transition show="{{ showCard }}" class="card" name="fade-down">
         <Card :info.sync="targetPOI"></Card>
       </van-transition>
     </view>
 
-    <van-popup show="{{ showLeftMenu }}" @close="handleCloseLeftMenu" position="left" custom-style="width: 50%;height: 100%;">
+    <van-popup show="{{ showLeftMenu }}" @close="handleCloseLeftMenu" position="left"
+               custom-style="width: 50%;height: 100%;">
       LeftMenu
     </van-popup>
 
@@ -243,7 +245,6 @@
 
     onLoad() {
       this.markers = this.$parent.globalData.mapData
-
       for (let i = 0; i < this.markers.length; i++) {
         if (this.markers[i].type === 'LOST') {
           this.lostMarkers.push(this.markers[i])
