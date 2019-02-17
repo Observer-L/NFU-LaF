@@ -1,0 +1,27 @@
+<style lang="less">
+</style>
+<template>
+  <view>
+    about
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class About extends wepy.page {
+    config = {
+      navigationBarTitleText: '关于南苑寻物',
+      usingComponents: {
+      }
+    }
+
+    data = {
+    }
+
+    methods = {
+    }
+
+    onLoad() {}
+  }
+</script>

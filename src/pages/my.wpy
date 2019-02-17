@@ -37,6 +37,7 @@
       <van-cell-group>
         <van-cell
           title="修改联系信息"
+          border="{{ false }}"
           is-link
           url="/pages/contact"
           icon="friends-o"
@@ -62,6 +63,13 @@
           border="{{ false }}"
           icon="comment-o"
         />
+        <van-cell
+          is-link
+          title="关于南苑寻物"
+          url="/pages/about"
+          border="{{ false }}"
+          icon="info-o"
+        />
       </van-cell-group>
     </view>
 
@@ -73,8 +81,8 @@
       show-cancel-button
       id="van-dialog"
       confirm-button-open-type="getUserInfo"
-      bind:getuserinfo="getUserInfo"
-      bind:cancel="handleCancel"/>
+      @getuserinfo="getUserInfo"
+      @cancel="handleCancel"/>
     <van-toast id="van-toast"/>
   </view>
 </template>

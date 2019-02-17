@@ -18,6 +18,7 @@
         'pages/index',
         'pages/post',
         'pages/detail',
+        'pages/about',
         'pages/privacy',
         'pages/contact',
         'pages/history',
@@ -36,16 +37,16 @@
         list: [
           {
             pagePath: 'pages/index',
-            text: '首页',
+            text: '寻物',
             iconPath: '/images/icon/home.png',
             selectedIconPath: '/images/icon/home@select.png'
           },
-          {
-            pagePath: 'pages/corner',
-            text: '角落',
-            iconPath: '/images/icon/corner.png',
-            selectedIconPath: '/images/icon/corner@select.png'
-          },
+          // {
+          //   pagePath: 'pages/corner',
+          //   text: '角落',
+          //   iconPath: '/images/icon/corner.png',
+          //   selectedIconPath: '/images/icon/corner@select.png'
+          // },
           {
             pagePath: 'pages/my',
             text: '个人中心',
