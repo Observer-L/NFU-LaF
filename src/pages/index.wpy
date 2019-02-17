@@ -116,6 +116,7 @@
         enable-3D="{{true}}"
         markers="{{markers}}"
         @markertap="handleMarkerTap"
+        @tap="handleMapTap"
         style="width: 100%; height: 680rpx;"
       >
         <cover-view class="action-btn">
@@ -196,6 +197,10 @@
           }
         }
         this.showCard = true
+      },
+      handleMapTap() {
+        this.showMapFilter = false
+        this.isActive = false
       },
       handleToggleAction() {
         this.isActive = !this.isActive
