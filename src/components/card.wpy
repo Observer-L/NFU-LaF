@@ -1,8 +1,97 @@
-<template lang="wxml">
+<style lang="less">
+  @import "../style/custom";
+  .item {
+    &.lost {
+      .item_title {
+        border-color: @lostColor;
+      }
+      .item_status {
+        background-color: @lostColor;
+      }
+    }
+    &.found {
+      .item_title {
+        border-color: @foundColor;
+      }
+      .item_status {
+        background-color: @foundColor;
+      }
+    }
+    .item_title {
+      background: #fff;
+      display: flex;
+      overflow: hidden;
+      justify-content: space-between;
+      border-radius: 80px 0 0 0;
+      border-width: 2px;
+      border-bottom-width: 0;
+      border-style: solid;
+      transition: border-color .2s ease-out;
+
+      .item_status {
+        width: 260rpx;
+        color: #fff;
+        font-size: 18px;
+        line-height: 26px;
+        text-align: center;
+        transform: skewX(-30deg);
+        transition: background-color .2s ease-out;
+
+        text {
+          display: inline-block;
+          letter-spacing:2px;
+          transform: skewX(30deg);
+        }
+
+      }
+
+      .item_reported_time {
+        display: flex;
+        align-items: center;
+        margin-right: 6px;
+        font-size: 14px;
+
+        .item_reported_time_prefix {
+          font-size: 80%;
+          color: #aaa;
+        }
+      }
+    }
+  }
+  .card {
+    .card_body {
+      background: #fff;
+      border-width: 2px;
+      border-top-width: 0;
+      border-style: solid;
+      transition: border-color .2s ease-out;
+      border-radius: 0 0 6px 6px;
+      &.lost {
+        border-color: @lostColor;
+      }
+      &.found {
+        border-color: @foundColor;
+      }
+    }
+    .details {
+      .detail {
+        display: flex;
+        align-items: center;
+
+        .prefix {
+          font-size: 12px;
+          margin-right: 6px;
+        }
+      }
+    }
+  }
+</style>
+
+<template>
 <view @tap="handleClickItem" class="card">
-  <view class="item">
-    <view class="item_title {{info.type === 'LOST' ? 'lost' : 'found'}}">
-      <view class="item_status {{info.type === 'LOST' ? 'lost' : 'found'}}">
+  <view class="item {{info.type === 'LOST' ? 'lost' : 'found'}}">
+    <view class="item_title">
+      <view class="item_status">
         <text>{{info.type}}</text>
       </view>
       <view class="item_reported_time">
@@ -22,9 +111,9 @@
         <view class="prefix">{{info.type === 'LOST' ? '丢失时间' : '拾到时间'}}：</view>
         <view class="time">{{info.itemDetail.fullTime}}</view>
       </view>
-      <view class="detail detail_desc">
+      <view class="detail detail_desc" wx:if="{{info.itemDetail.desc}}">
         <view class="prefix">更多信息：</view>
-        <view class="time">{{info.itemDetail.desc ? info.itemDetail.desc : '暂无描述'}}</view>
+        <view class="time">{{info.itemDetail.desc}}</view>
       </view>
     </view>
  </van-card>
@@ -42,7 +131,7 @@ export default class Card extends wepy.component {
   methods = {
     handleClickItem() {
       wx.navigateTo({
-        url: '/pages/detail?type=lost&id=' + this.info.id
+        url: '/pages/detail?id=' + this.info.id
       })
     }
   }
@@ -51,94 +140,3 @@ export default class Card extends wepy.component {
   }
 }
 </script>
-
-<style lang="less">
-  .item {
-    .item_title {
-      background: #fff;
-      display: flex;
-      overflow: hidden;
-      justify-content: space-between;
-      border-radius: 80px 0 0 0;
-      border-width: 2px;
-      border-bottom-width: 0;
-      border-style: solid;
-      transition: border-color .2s ease-out;
-      &.lost {
-        border-color: #d81e06;
-      }
-      &.found {
-        border-color: #1296db;
-      }
-
-      .item_status {
-        color: #fff;
-        font-size: 18px;
-        line-height: 26px;
-        text-align: center;
-        transition: background-color .2s ease-out;
-
-        text {
-          display: inline-block;
-          letter-spacing:2px;
-          transform: skewX(30deg);
-        }
-
-        &.lost, &.found {
-          width: 260rpx;
-          transform: skewX(-30deg);
-        }
-
-        &.lost {
-          /*background-color: rgb(255, 197, 4);*/
-          background-color: #d81e06;
-        }
-
-        &.found {
-          /*background-color: rgb(119, 181, 65);*/
-          background-color: #1296db;
-        }
-      }
-
-      .item_reported_time {
-        display: flex;
-        align-items: center;
-        margin-right: 6px;
-        font-size: 14px;
-
-        .item_reported_time_prefix {
-          font-size: 80%;
-          color: #aaa;
-        }
-      }
-    }
-  }
-  .card {
-    padding-bottom: 20rpx !important;
-    .card_body {
-      background: #fff;
-      border-width: 2px;
-      border-top-width: 0;
-      border-style: solid;
-      transition: border-color .2s ease-out;
-      border-radius: 0 0 6px 6px;
-      &.lost {
-        border-color: #d81e06;
-      }
-      &.found {
-        border-color: #1296db;
-      }
-    }
-    .details {
-      .detail {
-        display: flex;
-        align-items: center;
-
-        .prefix {
-          font-size: 12px;
-          margin-right: 6px;
-        }
-      }
-    }
-  }
-</style>

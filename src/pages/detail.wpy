@@ -1,6 +1,8 @@
 <style lang="less">
+  @import "../style/custom";
+
   swiper {
-    height: 500rpx;
+    height: 480rpx;
 
     swiper-item {
       image {
@@ -9,17 +11,28 @@
       }
     }
   }
+
+  .detail {
+    .place {
+      color: @foundColor;
+    }
+    &.lost {
+      .place {
+        color: @lostColor;
+      }
+    }
+  }
 </style>
 <template>
   <view>
     <view class="header">
       <swiper
-        indicator-dots="{{true}}"
+        indicator-dots="{{itemData.itemDetail.pics.length > 1}}"
         autoplay="{{true}}"
         interval="{{3000}}"
         duration="{{500}}"
       >
-        <block wx:for="{{itemDetail.pics}}" wx:key="{{index}}">
+        <block wx:for="{{itemData.itemDetail.pics}}" wx:key="{{index}}">
           <swiper-item>
             <image src="{{item}}" class="slide-image"/>
           </swiper-item>
@@ -27,52 +40,93 @@
       </swiper>
     </view>
 
-    <view class="detail">
-      <van-panel title="{{itemDetail.name}}" desc="{{itemDetail.desc}}" status="{{itemDetail.status}}" use-footer-slot>
-        <view>{{itemDetail.time}}</view>
-        <view>{{itemDetail.place}}</view>
-        <view>{{itemDetail.type}}</view>
-        <view slot="footer">
-          <van-button size="large" type="primary">{{postType === '丢失' ? '认领' : '告知'}}</van-button>
+    <view class="detail {{itemData.type === 'LOST' ? 'lost' : 'found'}}">
+      <van-panel
+        title="{{itemData.itemDetail.name}}"
+        desc="{{itemData.itemDetail.desc}}"
+        status="{{itemData.status === 0 ? '进行中' : '已完成'}}"
+      >
+        <view class="content-wrapper">
+          <span class="time">{{itemData.itemDetail.fullTime}}</span>
+          在
+          <span class="place"
+                @tap="handlePopupMap">{{itemData.itemDetail.place[0] + itemData.itemDetail.place[1]}}</span>
+          <span class="action">{{itemData.type === 'LOST' ? '丢失' : '捡到'}}</span>
         </view>
       </van-panel>
     </view>
+    <van-button size="large" type="primary" @tap="handleMakePhoneCall">
+      <van-icon name="phone-o"></van-icon>
+      联系对方
+    </van-button>
+    <van-popup show="{{ showMap }}" @close="handlePopupMap">
+      <map
+        id="map"
+        longitude="{{itemData.longitude}}"
+        latitude="{{itemData.latitude}}"
+        scale="18"
+        show-location
+        enable-rotate="{{true}}"
+        enable-3D="{{true}}"
+        markers="{{[itemData]}}"
+        circles="{{circles}}"
+        style="width: 80vw; height: 680rpx;"
+      ></map>
+    </van-popup>
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import { circlesStyle } from '../config/map'
 
   export default class Detail extends wepy.page {
     config = {
-      navigationBarTitleText: '丢失详情',
+      navigationBarTitleText: '详情',
+      disableScroll: true,
       usingComponents: {
         'van-panel': '../components/vant/panel/index',
-        'van-button': '../components/vant/button/index'
+        'van-button': '../components/vant/button/index',
+        'van-popup': '../components/vant/popup/index',
+        'van-icon': '../components/vant/icon/index'
       }
     }
 
     data = {
-      postType: '',
-      itemDetail: {
-        name: '校园卡',
-        type: '卡片/证件',
-        time: '三周前（2019-02-06）',
-        place: '图书馆',
-        desc: 'descdescdescdescdescdescdescdescdesc',
-        pics: [
-          'https://www.qiniu.com/assets/banner/banner-qvm1rmb-index-3c79c38ee87a7b6a0ef8ff28b2d8da9a28e567bdf3cb9bea8ea761d601be7ce6.jpg',
-          'https://www.qiniu.com/assets/banner/banner-kodo-private-d96be9240375eea0f8ee290148a6a36c09b2ba77b14324873d6b5c0d9c772a5c.jpg'
-        ],
-        status: '未完成'
+      itemData: null,
+      circles: [{
+        latitude: null,
+        longitude: null,
+        radius: 10,
+        color: circlesStyle.lostColor,
+        fillColor: circlesStyle.lostColor,
+        strokeWidth: circlesStyle.strokeWidth
+      }],
+      showMap: false
+    }
+
+    methods = {
+      handlePopupMap() {
+        this.showMap = !this.showMap
+      },
+      handleMakePhoneCall() {
+        wx.makePhoneCall({
+          phoneNumber: this.itemData.contact
+        })
       }
     }
 
-    methods = {}
-
     onLoad(options) {
-      this.postType = options.type === 'lost' ? '丢失' : '捡到'
-      console.log(options)
+      for (const i of this.$parent.globalData.mapData) {
+        if (i.id === Number(options.id)) {
+          this.itemData = i
+          this.circles[0].latitude = i.latitude
+          this.circles[0].longitude = i.longitude
+          this.circles[0].radius = i.itemDetail.radius
+          this.circles[0].fillColor = i.type === 'LOST' ? circlesStyle.lostColor + '80' : circlesStyle.foundColor + '80'
+          this.circles[0].color = i.type === 'LOST' ? circlesStyle.lostColor + '50' : circlesStyle.foundColor + '50'
+        }
+      }
     }
   }
 </script>

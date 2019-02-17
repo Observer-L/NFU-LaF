@@ -93,17 +93,14 @@
     }
   }
 
-  .list {
+  .card-wrapper {
     padding: 20rpx;
-    >.card {
-      margin-bottom: 26rpx;
-    }
   }
 </style>
 <template>
   <view>
     <view class="header">
-      <i class="iconfont icon-menu menu" @tap="handleShowLeftMenu"></i>
+      <i class="iconfont icon-menu menu" @tap="handleToggleLeftMenu"></i>
       <van-search value="{{ value }}" placeholder="请输入搜索关键词" class="search"/>
       <i class="iconfont filter {{showMapFilter ? 'icon-close' : 'icon-filter-fill'}}" @tap="handleToggleMapFilter"></i>
     </view>
@@ -115,35 +112,40 @@
         latitude="23.632366"
         scale="16"
         show-location
+        enable-rotate="{{true}}"
+        enable-3D="{{true}}"
         markers="{{markers}}"
         @markertap="handleMarkerTap"
         style="width: 100%; height: 680rpx;"
       >
         <cover-view class="action-btn">
           <cover-view class="options {{isActive ? 'show' : ''}}">
-            <cover-view class="option lost" @tap="handleClickLost">失物</cover-view>
-            <cover-view class="option found" @tap="handleClickFound">拾物</cover-view>
+            <cover-view class="option lost" id="lost" @tap="handleClickAction">失物</cover-view>
+            <cover-view class="option found" id="found" @tap="handleClickAction">拾物</cover-view>
           </cover-view>
           <cover-view class="toggle-btn" @tap="handleToggleAction">
             {{isActive ? 'x' : '+'}}
           </cover-view>
         </cover-view>
+
         <cover-view class="filter {{showMapFilter ? 'active' : ''}}" @tap="toggleSelectedFilter">
           <cover-view class="lost {{selectedFilter.lost ? 'selected' : ''}}" id="lost">LOST</cover-view>
           <cover-view class="found {{selectedFilter.found ? 'selected' : ''}}" id="found">FOUND</cover-view>
         </cover-view>
+
         <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}"
-                    @tap="handleCloseLeftMenu"></cover-view>
+                    @tap="handleToggleLeftMenu"></cover-view>
+
       </map>
     </view>
 
-    <view class="list">
+    <view class="card-wrapper">
       <van-transition show="{{ showCard }}" class="card" name="fade-down">
         <Card :info.sync="targetPOI"></Card>
       </van-transition>
     </view>
 
-    <van-popup show="{{ showLeftMenu }}" @close="handleCloseLeftMenu" position="left"
+    <van-popup show="{{ showLeftMenu }}" @close="handleToggleLeftMenu" position="left"
                custom-style="width: 50%;height: 100%;">
       LeftMenu
     </van-popup>
@@ -158,6 +160,7 @@
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '南苑寻物',
+      disableScroll: true,
       usingComponents: {
         'van-card': '../components/vant/card/index',
         'van-search': '../components/vant/search/index',
@@ -187,9 +190,9 @@
 
     methods = {
       handleMarkerTap(e) {
-        for (let i = 0; i < this.markers.length; i++) {
-          if (this.markers[i].id === e.markerId) {
-            this.targetPOI = this.markers[i]
+        for (const i of this.markers) {
+          if (i.id === e.markerId) {
+            this.targetPOI = i
           }
         }
         this.showCard = true
@@ -197,21 +200,13 @@
       handleToggleAction() {
         this.isActive = !this.isActive
       },
-      handleClickLost() {
+      handleClickAction(e) {
         wx.navigateTo({
-          url: '/pages/post?type=lost'
+          url: '/pages/post?type=' + e.target.id
         })
       },
-      handleClickFound() {
-        wx.navigateTo({
-          url: '/pages/post?type=found'
-        })
-      },
-      handleShowLeftMenu() {
-        this.showLeftMenu = true
-      },
-      handleCloseLeftMenu() {
-        this.showLeftMenu = false
+      handleToggleLeftMenu() {
+        this.showLeftMenu = !this.showLeftMenu
       },
       handleToggleMapFilter() {
         this.showMapFilter = !this.showMapFilter
@@ -220,22 +215,13 @@
         if (!e.target.id) return
         if (e.target.id === 'lost') {
           this.selectedFilter.lost = !this.selectedFilter.lost
-          if (!this.selectedFilter.lost) {
-            this.markers = this.foundMarkers
-          } else {
-            this.markers = this.markers.concat(this.lostMarkers)
-          }
-
+          !this.selectedFilter.lost ? this.markers = this.foundMarkers : this.markers = this.markers.concat(this.lostMarkers)
           if (!this.selectedFilter.lost && !this.selectedFilter.found) {
             this.markers = []
           }
         } else {
           this.selectedFilter.found = !this.selectedFilter.found
-          if (!this.selectedFilter.found) {
-            this.markers = this.lostMarkers
-          } else {
-            this.markers = this.markers.concat(this.foundMarkers)
-          }
+          !this.selectedFilter.found ? this.markers = this.lostMarkers : this.markers = this.markers.concat(this.foundMarkers)
           if (!this.selectedFilter.lost && !this.selectedFilter.found) {
             this.markers = []
           }
@@ -245,13 +231,8 @@
 
     onLoad() {
       this.markers = this.$parent.globalData.mapData
-      for (let i = 0; i < this.markers.length; i++) {
-        if (this.markers[i].type === 'LOST') {
-          this.lostMarkers.push(this.markers[i])
-        } else {
-          this.foundMarkers.push(this.markers[i])
-        }
-      }
+      this.lostMarkers = this.$parent.globalData.lostMarkers
+      this.foundMarkers = this.$parent.globalData.foundMarkers
     }
   }
 </script>

@@ -91,7 +91,7 @@
   .mask {
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0, .8);
   }
 
   .title {
@@ -225,8 +225,6 @@
         scale="17"
         markers="{{markers}}"
         circles="{{circles}}"
-        bindmarkertap="markertap"
-        polyline="{{polyline}}"
         show-location
         enable-rotate="{{true}}"
         enable-3D="{{true}}"
@@ -236,16 +234,16 @@
                     @tap="selectLocation">
           重选
         </cover-view>
+
         <cover-view
           class="{{ showMapMask ? 'mask' : ''}}"
           @tap="{{locationOptions.popupAreaPicker ? 'handleAreaPickerClose' : ''}}"
         ></cover-view>
       </map>
+
       <cover-view class="area_wrapper" style="display: {{locationOptions.location ? 'none' : 'flex'}}">
         <cover-view class="title">在哪里{{postType === 'lost' ? '丢失' : '捡到'}}的？</cover-view>
-        <cover-view class="placeholder" @tap="selectLocation">{{locationOptions.location ? locationOptions.location :
-          '请选择事发地点'}}
-        </cover-view>
+        <cover-view class="placeholder" @tap="selectLocation">请选择事发地点</cover-view>
       </cover-view>
 
       <view class="results" style="{{!locationOptions.location ? 'display:none' : ''}}">
@@ -400,7 +398,7 @@
           value="{{ datetimeOptions._time }}"
           label="事发时间"
           placeholder="请选择事发时间"
-          @tap="handleShowDatetimePicker"
+          @tap="handleToggleDatetimePicker"
           readonly="{{true}}"
           left-icon="clock-o"
         />
@@ -482,10 +480,10 @@
       <van-picker
         title="选择物品类型"
         columns="{{ itemTypeOptions.columns }}"
-        bind:change="handleChangeItemType"
+        @change="handleChangeItemType"
       />
     </van-popup>
-    <van-popup show="{{ datetimeOptions.popupDatetimePicker }}" @close="handleDatetimePickerClose" position="bottom"
+    <van-popup show="{{ datetimeOptions.popupDatetimePicker }}" @close="handleToggleDatetimePicker" position="bottom"
                overlay="{{true}}">
       <van-datetime-picker
         type="datetime"
@@ -503,24 +501,10 @@
 
 <script>
   import wepy from 'wepy'
-  import Http from '@/utils/http'
+  import Http from '../utils/http'
   import Toast from '../components/vant/toast/toast'
   import { format2FullTime } from '../utils/format_time'
-
-  const areas = {
-    '西区': ['西饭', '商业街', '西操', '西体', '其他'],
-    '中区': ['中饭', '音乐楼', '图书馆', '大礼堂', '铜像', '其他'],
-    '东区': ['东饭', '东操', '体育馆', '其他'],
-    '后门': ['其他']
-  }
-
-  const itemType = {
-    '卡片/证件': ['校园卡', '身份证', '银行卡', '羊城通', '其他'],
-    '数码产品': ['U盘', '耳机', '手机', '鼠标', '其他'],
-    '学习用品': ['书本', '笔', '体育馆', '其他'],
-    '生活用品': ['水杯', '帽子', '其他'],
-    '其他': ['其他']
-  }
+  import { markersStyle, circlesStyle, areas, itemType } from '../config/map'
 
   export default class Post extends wepy.page {
     config = {
@@ -529,7 +513,6 @@
       usingComponents: {
         'van-field': '../components/vant/field/index',
         'van-cell': '../components/vant/cell/index',
-        'van-cell-group': '../components/vant/cell-group/index',
         'van-picker': '../components/vant/picker/index',
         'van-popup': '../components/vant/popup/index',
         'van-button': '../components/vant/button/index',
@@ -550,16 +533,16 @@
       showMap: true,
       showMapMask: true,
       markers: [{
-        width: 36,
-        height: 36
+        width: markersStyle.width,
+        height: markersStyle.height
       }],
       circles: [{
-        radius: 30,
-        strokeWidth: 1
+        radius: circlesStyle.radius,
+        strokeWidth: circlesStyle.strokeWidth
       }],
       locationOptions: {
         area: [],
-        radius: 10,
+        radius: circlesStyle.radius,
         location: '',
         columns: [
           {
@@ -621,18 +604,13 @@
 
     methods = {
       handleSwitchContact(e) {
-        if (e.target.id === 'custom') {
-          this.normalContact = false
-        } else {
-          this.normalContact = true
-        }
+        e.target.id === 'custom' ? this.normalContact = false : this.normalContact = true
       },
       showNext(e) {
         const self = this
         switch (e.target.id) {
           case 'sn1':
             if (!this.locationOptions.area.length) {
-              // Toast('请填写完表单')
               self.err.location = true
               setTimeout(() => {
                 self.err.location = false
@@ -645,7 +623,6 @@
             break
           case 'sn2':
             const isCardMode = this.itemTypeOptions.itemType[0] === '卡片/证件'
-            console.log(this.details.cardPic.length, this.details.ownerName, this.details.cardId)
             if (isCardMode) {
               if (!(this.details.cardPic.length && this.details.ownerName && this.details.cardId)) {
                 Toast.fail('请填写完表单1')
@@ -687,14 +664,14 @@
         wx.chooseLocation({
           success(res) {
             self.showMapMask = false
-            self.locationOptions.location = [res.latitude, res.longitude]
             self.markers[0]['latitude'] = res.latitude
             self.markers[0]['longitude'] = res.longitude
-            self.markers[0]['iconPath'] = `../images/icon/location${self.postType === 'lost' ? '.png' : '@found.png'}`
             self.circles[0]['latitude'] = res.latitude
             self.circles[0]['longitude'] = res.longitude
-            self.circles[0]['color'] = self.postType === 'lost' ? '#d81e0680' : '#1296db80'
-            self.circles[0]['fillColor'] = self.postType === 'lost' ? '#d81e0650' : '#1296db50'
+            self.locationOptions.location = [res.latitude, res.longitude]
+            self.markers[0]['iconPath'] = `../images/icon/location${self.postType === 'lost' ? '.png' : '@found.png'}`
+            self.circles[0]['color'] = self.postType === 'lost' ? circlesStyle.lostColor + '80' : circlesStyle.foundColor + '80'
+            self.circles[0]['fillColor'] = self.postType === 'lost' ? circlesStyle.lostColor + '50' : circlesStyle.foundColor + '50'
             self.percentage = 25
             self.$apply()
           }
@@ -709,9 +686,9 @@
         this.locationOptions.popupAreaPicker = true
       },
       handleAreaPickerClose() {
+        const columns = this.locationOptions.columns
         this.showMapMask = false
         this.locationOptions.popupAreaPicker = false
-        const columns = this.locationOptions.columns
         if (!this.locationOptions.area.length) {
           this.locationOptions.area = [columns[0].values[0], columns[1].values[columns[1].defaultIndex]]
         }
@@ -763,9 +740,7 @@
           sizeType: ['original', 'compressed'],
           sourceType: ['album', 'camera'],
           success(res) {
-            // tempFilePath可以作为img标签的src属性显示图片
-            const tempFilePaths = res.tempFilePaths
-            self.details.cardPic = tempFilePaths
+            self.details.cardPic = res.tempFilePaths
             self.scanning = true
             self.$apply()
           }
@@ -816,9 +791,7 @@
           sizeType: ['original', 'compressed'],
           sourceType: ['album', 'camera'],
           success(res) {
-            // tempFilePath可以作为img标签的src属性显示图片
-            const tempFilePaths = res.tempFilePaths
-            self.details.pics = self.details.pics.concat(tempFilePaths)
+            self.details.pics = self.details.pics.concat(res.tempFilePaths)
             console.log(self.details.pics)
             self.$apply()
           }
@@ -828,53 +801,55 @@
         this.datetimeOptions.time = e.detail
         this.datetimeOptions._time = format2FullTime(e.detail)
       },
-      handleDatetimePickerClose() {
-        this.datetimeOptions.popupDatetimePicker = false
-      },
-      handleShowDatetimePicker() {
-        this.datetimeOptions.popupDatetimePicker = true
+      handleToggleDatetimePicker() {
+        this.datetimeOptions.popupDatetimePicker = !this.datetimeOptions.popupDatetimePicker
       },
       async handleSubmit() {
         if (this.normalContact) {
-          console.log(this.contact)
           if (!this.contact.phone) {
             Toast.fail('请填写联系电话')
+            return
+          }
+        } else {
+          if (!this.contact.point.length) {
+            Toast.fail('请填写指定地点')
             return
           }
         }
         this.loading = true
         const self = this
-        const resp = await Http.Post('item', {
-          type: this.postType === 'lost' ? 'lost' : 'found',
-          itemType: this.itemTypeOptions.itemType,
-          // itemName: this.itemName,
+        await Http.Post('item', {
+          type: this.postType,
+          itemType: this.itemTypeOptions.itemType[0],
+          itemName: this.itemTypeOptions.itemType[0] !== '其他' ? this.itemTypeOptions.itemType[1] : this.itemTypeOptions.customItemType,
           coord: this.locationOptions.location,
+          radius: this.locationOptions.radius,
           desc: this.details.desc,
           pics: this.itemTypeOptions.itemType[0] !== '卡片/证件' ? this.details.pics : this.details.cardPic,
           time: this.datetimeOptions.time,
           place: this.locationOptions.area,
-          contact: this.contact
+          contact: this.normalContact ? this.contact.phone : this.contact.point,
+          user_id: this.contact.id
         }).then(() => {
-            self.loading = false
-            self.$apply()
-            Toast.success('发布成功')
-            setTimeout(() => {
-              wx.reLaunch({
-                url: './index',
-                success(res) {
-                  self.$parent._loadMapData()
-                }
-              })
-            }, 1500)
-          }
+          self.loading = false
+          self.$apply()
+          Toast.success('发布成功')
+          setTimeout(() => {
+            wx.reLaunch({
+              url: './index',
+              success() {
+                self.$parent.loadMapData()
+              }
+            })
+          }, 1500)
+        }
         )
       }
     }
 
     onLoad(options) {
       this.postType = options.type
-      const userInfo = this.$parent.globalData.userInfo
-      this.contact = userInfo
+      this.contact = this.$parent.globalData.userInfo
     }
   }
 </script>

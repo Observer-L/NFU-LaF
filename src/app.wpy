@@ -8,9 +8,9 @@
   import 'wepy-async-function'
   import db from './utils/db'
   import Login from './utils/login'
-  import { map } from './markers'
   import { format2FullTime, format2RelativeTime, formatRFC2822ToCalendar } from './utils/format_time'
   import Http from './utils/http'
+  import { markersStyle } from './config/map'
 
   export default class extends wepy.app {
     config = {
@@ -58,7 +58,9 @@
 
     globalData = {
       userInfo: null,
-      mapData: []
+      mapData: [],
+      lostMarkers: [],
+      foundMarkers: []
     }
 
     constructor() {
@@ -70,55 +72,29 @@
       new Login().getToken().then(() => {
         this.globalData.userInfo = db.Get('userInfo')
       })
-      this._loadMapData()
-      // this.loadMapData()
+      this.loadMapData()
     }
 
-    async _loadMapData() {
+    async loadMapData() {
       this.globalData.mapData = []
-      this.globalData.lostMarkers = []
-      this.globalData.foundMarkers = []
       const resp = await Http.Get('items')
       const mapData = resp.data
       for (let i = 0; i < mapData.length; i++) {
         for (let j = 0; j < mapData[i].data.length; j++) {
           const POI = mapData[i].data[j]
-          POI.width = 36
-          POI.height = 36
+          POI.width = markersStyle.width
+          POI.height = markersStyle.height
           POI.type = mapData[i].type
           POI.iconPath = POI.type === 'LOST' ? '/images/icon/location.png' : '/images/icon/location@found.png'
-          POI.label = {
-            content: POI.itemType,
-            color: '#000000',
-            fontSize: 16
-          }
+          POI.label = Object.assign({ content: POI.itemType !== '其他' ? POI.itemType : POI.itemDetail.name }, markersStyle.label)
           POI.itemDetail.fullTime = format2RelativeTime(POI.itemDetail.time) + `（${format2FullTime(POI.itemDetail.time)}）`
           POI.itemDetail.time = format2RelativeTime(POI.itemDetail.time)
           POI.itemDetail.reportedTime = formatRFC2822ToCalendar(POI.itemDetail.reportedTime)
           this.globalData.mapData.push(POI)
         }
       }
-    }
-
-    loadMapData() {
-      const mapData = map.map
-      for (let i = 0; i < mapData.length; i++) {
-        for (let j = 0; j < mapData[i].data.length; j++) {
-          const POI = mapData[i].data[j]
-          POI.width = 36
-          POI.height = 36
-          POI.type = mapData[i].type
-          POI.iconPath = POI.type === 'LOST' ? '/images/icon/location.png' : '/images/icon/location@found.png'
-          POI.label = {
-            content: POI.itemType,
-            color: '#000000',
-            fontSize: 16
-          }
-          POI.itemDetail.fullTime = format2RelativeTime(POI.itemDetail.time) + `（${format2FullTime(POI.itemDetail.time)}）`
-          POI.itemDetail.time = format2RelativeTime(POI.itemDetail.time)
-          POI.itemDetail.reportedTime = format2RelativeTime(POI.itemDetail.reportedTime)
-          this.globalData.mapData.push(POI)
-        }
+      for (const i of this.globalData.mapData) {
+        i.type === 'LOST' ? this.globalData.lostMarkers.push(i) : this.globalData.foundMarkers.push(i)
       }
     }
   }
