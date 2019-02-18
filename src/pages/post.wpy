@@ -505,6 +505,7 @@
   import Toast from '../components/vant/toast/toast'
   import { format2FullTime } from '../utils/format_time'
   import { markersStyle, circlesStyle, areas, itemType } from '../config/map'
+  import {API} from '../config/secret'
 
   export default class Post extends wepy.page {
     config = {
@@ -714,7 +715,7 @@
       handleItemTypePickerClose() {
         this.itemTypeOptions.popupItemTypePicker = false
         if (!this.itemTypeOptions.itemType.length) {
-          this.itemTypeOptions.itemType = [this.itemTypeOptions.columns[0].values[0], this.itemTypeOptions.columns[1].values[0]]
+          this.itemTypeOptions.itemType = [this.itemTypeOptions.columns[0].values[0], this.itemTypeOptions.columns[1].values[this.itemTypeOptions.columns[1].defaultIndex]]
         }
         if (this.itemTypeOptions.itemType[0] === '其他') {
           this.itemTypeOptions.itemTypeInputFocus = true
@@ -734,15 +735,56 @@
         }
       },
       handleUploadCard() {
+        let cardType
+        switch (this.itemTypeOptions.itemType[1]) {
+          case '身份证':
+            cardType = 'id'
+            break
+          case '银行卡':
+            cardType = 'bank'
+            break
+        }
         const self = this
         wx.chooseImage({
           count: 1,
           sizeType: ['original', 'compressed'],
           sourceType: ['album', 'camera'],
           success(res) {
-            self.details.cardPic = res.tempFilePaths
             self.scanning = true
-            self.$apply()
+            self.details.cardPic = res.tempFilePaths
+            const imageBase64 = wx.getFileSystemManager().readFileSync(res.tempFilePaths[0], 'base64')
+            wx.request({
+              url: `https://api-cn.faceplusplus.com/cardpp/v1/ocr${cardType}card`,
+              method: 'POST',
+              header: {
+                'content-type': 'application/x-www-form-urlencoded'
+              },
+              data: {
+                api_key: API.key,
+                api_secret: API.secret,
+                image_base64: imageBase64
+              },
+              success(res) {
+                self.scanning = false
+                const cards = res.data[cardType === 'id' ? 'cards' : cardType + '_cards']
+                if (!res.data.error_message && cards.length) {
+                  const card = cards[0]
+                  switch (cardType) {
+                    case 'id':
+                      self.details.cardId = card.id_card_number
+                      self.details.ownerName = card.name
+                      break
+                    case 'bank':
+                      self.details.cardId = card.number
+                      self.details.ownerName = card.bank
+                      break
+                  }
+                  self.$apply()
+                } else {
+                  Toast.fail('识别失败，请重新选择图片或手动输入证件信息')
+                }
+              }
+            })
           }
         })
       },
