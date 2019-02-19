@@ -205,16 +205,16 @@
       handleToggleAction() {
         this.isActive = !this.isActive
       },
-      handleClickAction(e) {
-        wx.navigateTo({
-          url: '/pages/post?type=' + e.target.id
-        })
-      },
       handleToggleLeftMenu() {
         this.showLeftMenu = !this.showLeftMenu
       },
       handleToggleMapFilter() {
         this.showMapFilter = !this.showMapFilter
+      },
+      handleClickAction(e) {
+        wx.navigateTo({
+          url: '/pages/post?type=' + e.target.id
+        })
       },
       toggleSelectedFilter(e) {
         if (!e.target.id) return
@@ -235,9 +235,13 @@
     }
 
     onLoad() {
-      this.markers = this.$parent.globalData.mapData
-      this.lostMarkers = this.$parent.globalData.lostMarkers
-      this.foundMarkers = this.$parent.globalData.foundMarkers
+      const self = this
+      this.$parent.loadData().then(res => {
+        self.markers = res.markers
+        self.lostMarkers = res.lostMarkers
+        self.foundMarkers = res.foundMarkers
+        self.$apply()
+      })
     }
   }
 </script>

@@ -220,8 +220,8 @@
     <view class="body">
       <map
         id="map"
-        longitude="{{locationOptions.location ? locationOptions.location[1] : '113.679142'}}"
-        latitude="{{locationOptions.location ? locationOptions.location[0] : '23.632573'}}"
+        longitude="{{locationOptions.location[1] || 113.679142}}"
+        latitude="{{locationOptions.location[0] || 23.632573}}"
         scale="17"
         markers="{{markers}}"
         circles="{{circles}}"
@@ -307,9 +307,9 @@
           />
         </van-cell>
 
-        <view class="upload-wrapper" style="height: {{itemTypeOptions.itemType[0] === '卡片/证件' ? '438rpx' : 'auto'}}">
+        <view class="upload-wrapper" style="height: {{itemTypeOptions.itemType[0] === '证件' ? '438rpx' : 'auto'}}">
           <!--TODO:智能扫描-->
-          <view class="upload-pics" wx:if="{{itemTypeOptions.itemType[0] !== '卡片/证件'}}">
+          <view class="upload-pics" wx:if="{{itemTypeOptions.itemType[0] !== '证件'}}">
             <block wx:if="{{itemTypeOptions.itemType.length}}">
               <view class="upload-btn" @tap="handleAddPics">+</view>
               <image wx:for="{{details.pics}}" src="{{item}}" class="pic" wx:key="{{index}}"></image>
@@ -323,7 +323,7 @@
           </view>
         </view>
 
-        <view class="item-details" wx:if="{{itemTypeOptions.itemType[0] !== '卡片/证件'}}">
+        <view class="item-details" wx:if="{{itemTypeOptions.itemType[0] !== '证件'}}">
           <block wx:if="{{itemTypeOptions.itemType.length}}">
             <view class="title">物品的更多信息（可选）</view>
             <van-field
@@ -594,7 +594,9 @@
         brand: '',
         desc: ''
       },
-      contact: {},
+      contact: {
+        phone: ''
+      },
       err: {
         location: false
       },
@@ -623,7 +625,7 @@
             this.showStep2 = true
             break
           case 'sn2':
-            const isCardMode = this.itemTypeOptions.itemType[0] === '卡片/证件'
+            const isCardMode = this.itemTypeOptions.itemType[0] === '证件'
             if (isCardMode) {
               if (!(this.details.cardPic.length && this.details.ownerName && this.details.cardId)) {
                 Toast.fail('请填写完表单1')
@@ -847,6 +849,7 @@
         this.datetimeOptions.popupDatetimePicker = !this.datetimeOptions.popupDatetimePicker
       },
       async handleSubmit() {
+        const self = this
         if (this.normalContact) {
           if (!this.contact.phone) {
             Toast.fail('请填写联系电话')
@@ -859,31 +862,28 @@
           }
         }
         this.loading = true
-        const self = this
-        await Http.Post('item', {
+        this.locationOptions.area.push(this.locationOptions.radius)
+        const data = {
           type: this.postType,
           itemType: this.itemTypeOptions.itemType[0],
           itemName: this.itemTypeOptions.itemType[0] !== '其他' ? this.itemTypeOptions.itemType[1] : this.itemTypeOptions.customItemType,
-          coord: this.locationOptions.location,
-          radius: this.locationOptions.radius,
+          location: this.locationOptions.location,
           desc: this.details.desc,
-          pics: this.itemTypeOptions.itemType[0] !== '卡片/证件' ? this.details.pics : this.details.cardPic,
+          images: this.itemTypeOptions.itemType[0] !== '证件' ? this.details.pics : this.details.cardPic,
           time: this.datetimeOptions.time,
-          place: this.locationOptions.area,
-          contact: this.normalContact ? this.contact.phone : this.contact.point,
-          user_id: this.contact.id
-        }).then(() => {
-          self.loading = false
-          self.$apply()
+          area: this.locationOptions.area,
+          contact: this.normalContact ? this.contact : {point: this.contact.point}
+        }
+        this.loading = true
+        this.$parent.insertItem(data).then(() => {
+          this.loading = false
           Toast.success('发布成功')
           setTimeout(() => {
             wx.reLaunch({
-              url: './index',
-              success() {
-                self.$parent.loadMapData()
-              }
+              url: './index'
             })
           }, 1500)
+          self.$apply()
         }
         )
       }
@@ -891,7 +891,7 @@
 
     onLoad(options) {
       this.postType = options.type
-      this.contact = this.$parent.globalData.userInfo
+      // this.contact = this.$parent.globalData.userInfo
     }
   }
 </script>

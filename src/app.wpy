@@ -8,7 +8,7 @@
   import 'wepy-async-function'
   import db from './utils/db'
   import Login from './utils/login'
-  import { format2FullTime, format2RelativeTime, formatRFC2822ToCalendar } from './utils/format_time'
+  import { format2FullTime, format2RelativeTime } from './utils/format_time'
   import Http from './utils/http'
   import { markersStyle } from './config/map'
 
@@ -59,9 +59,7 @@
 
     globalData = {
       userInfo: null,
-      mapData: [],
-      lostMarkers: [],
-      foundMarkers: []
+      mapData: []
     }
 
     constructor() {
@@ -70,33 +68,96 @@
     }
 
     onLaunch() {
-      new Login().getToken().then(() => {
-        this.globalData.userInfo = db.Get('userInfo')
+      wx.cloud.init({
+        env: 'ufu-laf',
+        traceUser: true
       })
-      this.loadMapData()
+      // new Login().getToken().then(() => {
+      //   this.globalData.userInfo = db.Get('userInfo')
+      // })
+      // this.loadMapData()
     }
 
-    async loadMapData() {
-      this.globalData.mapData = []
-      const resp = await Http.Get('items')
-      const mapData = resp.data
-      for (let i = 0; i < mapData.length; i++) {
-        for (let j = 0; j < mapData[i].data.length; j++) {
-          const POI = mapData[i].data[j]
-          POI.width = markersStyle.width
-          POI.height = markersStyle.height
-          POI.type = mapData[i].type
-          POI.iconPath = POI.type === 'LOST' ? '/images/icon/location.png' : '/images/icon/location@found.png'
-          POI.label = Object.assign({ content: POI.itemType !== '其他' ? POI.itemType : POI.itemDetail.name }, markersStyle.label)
-          POI.itemDetail.fullTime = format2RelativeTime(POI.itemDetail.time) + `（${format2FullTime(POI.itemDetail.time)}）`
-          POI.itemDetail.time = format2RelativeTime(POI.itemDetail.time)
-          POI.itemDetail.reportedTime = formatRFC2822ToCalendar(POI.itemDetail.reportedTime)
-          this.globalData.mapData.push(POI)
-        }
-      }
-      for (const i of this.globalData.mapData) {
-        i.type === 'LOST' ? this.globalData.lostMarkers.push(i) : this.globalData.foundMarkers.push(i)
-      }
+    loadData() {
+      const self = this
+      const db = wx.cloud.database()
+      const items = db.collection('items')
+      return new Promise((resolve, reject) => {
+        items.get().then(res => {
+          const markers = self.clearData(res.data)
+          resolve(markers)
+        })
+      })
     }
+
+    clearData(data) {
+      const cleanData = {
+        markers: [],
+        lostMarkers: [],
+        foundMarkers: []
+      }
+
+      for (const i of data) {
+        let POI = Object.assign(i, {
+          id: i._id,
+          type: i.type,
+          latitude: i.location.latitude,
+          longitude: i.location.longitude,
+          width: markersStyle.width,
+          height: markersStyle.height,
+          reportedTime: format2RelativeTime(i.reportedTime),
+          time: format2RelativeTime(i.time),
+          fullTime: format2RelativeTime(i.time) + `（${format2FullTime(i.time)}）`,
+          iconPath: i.type === 'lost' ? '/images/icon/location.png' : '/images/icon/location@found.png',
+          label: Object.assign({ content: i.itemType !== '其他' ? i.itemType : i.itemName }, markersStyle.label)
+        })
+        cleanData.markers.push(POI)
+        i.type === 'lost' ? cleanData.lostMarkers.push(POI) : cleanData.foundMarkers.push(POI)
+      }
+      this.globalData.mapData = cleanData
+      return cleanData
+    }
+
+    insertItem(data) {
+      const self = this
+      const db = wx.cloud.database()
+      const items = db.collection('items')
+      return new Promise((resolve, reject) => {
+        items.add({
+          data: Object.assign(data, {
+            location: new db.Geo.Point(data.location[1], data.location[0]),
+            reportedTime: db.serverDate(),
+            status: 0
+          })
+        })
+          .then(res => {
+            self.loadData()
+            resolve()
+          })
+      })
+    }
+
+    // async loadMapData() {
+    //   this.globalData.mapData = []
+    //   const resp = await Http.Get('items')
+    //   const mapData = resp.data
+    //   for (let i = 0; i < mapData.length; i++) {
+    //     for (let j = 0; j < mapData[i].data.length; j++) {
+    //       const POI = mapData[i].data[j]
+    //       POI.width = markersStyle.width
+    //       POI.height = markersStyle.height
+    //       POI.type = mapData[i].type
+    //       POI.iconPath = POI.type === 'LOST' ? '/images/icon/location.png' : '/images/icon/location@found.png'
+    //       POI.label = Object.assign({ content: POI.itemType !== '其他' ? POI.itemType : POI.itemDetail.name }, markersStyle.label)
+    //       POI.itemDetail.fullTime = format2RelativeTime(POI.itemDetail.time) + `（${format2FullTime(POI.itemDetail.time)}）`
+    //       POI.itemDetail.time = format2RelativeTime(POI.itemDetail.time)
+    //       POI.itemDetail.reportedTime = formatRFC2822ToCalendar(POI.itemDetail.reportedTime)
+    //       this.globalData.mapData.push(POI)
+    //     }
+    //   }
+    //   for (const i of this.globalData.mapData) {
+    //     i.type === 'LOST' ? this.globalData.lostMarkers.push(i) : this.globalData.foundMarkers.push(i)
+    //   }
+    // }
   }
 </script>

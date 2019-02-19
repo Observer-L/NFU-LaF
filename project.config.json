@@ -13,5 +13,6 @@
 	"projectname": "nfu-laf",
 	"miniprogramRoot": "dist/",
 	"libVersion": "2.6.0",
-	"condition": {}
+	"condition": {},
+  "cloudfunctionRoot": "cloudfunction"
 }

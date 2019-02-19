@@ -66,6 +66,7 @@
       border-style: solid;
       transition: border-color .2s ease-out;
       border-radius: 0 0 6px 6px;
+      word-break: ;
       &.lost {
         border-color: @lostColor;
       }
@@ -80,7 +81,10 @@
 
         .prefix {
           font-size: 12px;
-          margin-right: 6px;
+        }
+
+        .content {
+          flex: 2;
         }
       }
     }
@@ -89,31 +93,31 @@
 
 <template>
 <view @tap="handleClickItem" class="card">
-  <view class="item {{info.type === 'LOST' ? 'lost' : 'found'}}">
+  <view class="item {{info.type}}">
     <view class="item_title">
       <view class="item_status">
         <text>{{info.type}}</text>
       </view>
       <view class="item_reported_time">
         <text class="item_reported_time_prefix">发布时间：</text>
-        <text>{{info.itemDetail.reportedTime}}</text>
+        <text>{{info.reportedTime}}</text>
       </view>
     </view>
   </view>
   <van-card
     tag="标签"
-    title="{{info.itemType}} - {{info.itemDetail.name}}"
-    thumb="{{info.itemDetail.pics[0]}}"
-    custom-class="card_body {{info.type === 'LOST' ? 'lost' : 'found'}}"
+    title="{{info.itemType}} - {{info.itemName}}"
+    thumb="{{info.images[0]}}"
+    custom-class="card_body {{info.type}}"
   >
     <view slot="desc" class="details">
       <view class="detail detail_time">
-        <view class="prefix">{{info.type === 'LOST' ? '丢失时间' : '拾到时间'}}：</view>
-        <view class="time">{{info.itemDetail.fullTime}}</view>
+        <view class="prefix">{{info.type === 'lost' ? '丢失时间' : '拾取时间'}}：</view>
+        <view class="content">{{info.fullTime}}</view>
       </view>
-      <view class="detail detail_desc" wx:if="{{info.itemDetail.desc}}">
-        <view class="prefix">更多信息：</view>
-        <view class="time">{{info.itemDetail.desc}}</view>
+      <view class="detail detail_desc" wx:if="{{info.desc}}">
+        <view class="prefix">描述：</view>
+        <view class="content van-ellipsis">{{info.desc}}</view>
       </view>
     </view>
  </van-card>
