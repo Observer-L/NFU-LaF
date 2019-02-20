@@ -3,18 +3,17 @@
     padding: 20px 0;
     background: #fff;
 
-    .user_info {
+    .userinfo {
       display: flex;
       align-items: center;
       flex-direction: column;
 
       .avatar {
-        image {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          border: 2px solid #f8f8f8;
-        }
+        overflow: hidden;
+        width: 160rpx;
+        height: 160rpx;
+        border-radius: 50%;
+        border: 2px solid #f8f8f8;
       }
     }
   }
@@ -22,14 +21,11 @@
 <template>
   <view>
     <view class="header">
-      <view class="user_info">
-        <view
-          class="avatar"
-          @tap="{{isAuth ? null : 'login'}}"
-        >
-          <image src="{{userInfo.avatarUrl}}" alt=""></image>
-        </view>
-        <view class="nickname">{{userInfo.nickname}}</view>
+      <view class="userinfo">
+        <image class="avatar" src="{{userInfo.avatarUrl}}" @tap="{{isAuth ? '' : 'authorize'}}"></image>
+        <view class="nickname">{{userInfo.nickName}}</view>
+         <!--<open-data class="avatar" type="userAvatarUrl"></open-data>-->
+        <!--<open-data class="nickname" type="userNickName"></open-data>-->
       </view>
     </view>
 
@@ -40,36 +36,31 @@
           border="{{ false }}"
           is-link
           url="/pages/contact"
-          icon="friends-o"
-        />
+          icon="friends-o"></van-cell>
         <van-cell
           title="隐私设置"
           label="描述信息"
           border="{{ false }}"
           is-link
           url="/pages/privacy"
-          icon="setting-o"
-        />
+          icon="setting-o"></van-cell>
         <van-cell
           title="历史记录"
           is-link
           border="{{ false }}"
           url="/pages/history"
-          icon="underway-o"
-        />
+          icon="underway-o"></van-cell>
         <van-cell
           is-link
           title="反馈建议"
           border="{{ false }}"
-          icon="comment-o"
-        />
+          icon="comment-o"></van-cell>
         <van-cell
           is-link
           title="关于南苑寻物"
           url="/pages/about"
           border="{{ false }}"
-          icon="info-o"
-        />
+          icon="info-o"></van-cell>
       </van-cell-group>
     </view>
 
@@ -89,8 +80,6 @@
 
 <script>
   import wepy from 'wepy'
-  import Http from '@/utils/http'
-  import db from '@/utils/db'
 
   import Toast from '../components/vant/toast/toast'
 
@@ -106,57 +95,54 @@
     }
 
     data = {
-      isLogin: false,
       isAuth: false,
       userInfo: {
-        nickname: '未授权',
+        nickName: '未授权',
         avatarUrl: '../images/avatar.png'
       },
       showDialog: false
     }
 
     methods = {
-      login() {
+      authorize() {
         this.showDialog = true
       },
       handleCancel() {
         this.showDialog = false
-        Toast.fail('拒绝授权将影响应用使用体验')
+        Toast.fail('拒绝授权将影响使用体验')
       },
       async getUserInfo(e) {
-        const userInfo = db.Get('userInfo')
-        const detail = e.detail.userInfo
-        if (!detail) {
+        const self = this
+        const db = wx.cloud.database()
+        const users = db.collection('users')
+        const userInfo = e.detail.userInfo
+        if (userInfo) {
+          wx.setStorage({
+            key: 'userInfo',
+            data: userInfo
+          })
+          self.userInfo = userInfo
+          users.add({
+            data: Object.assign(userInfo, {})
+          }).then(res => {
+            self.showDialog = false
+            self.isAuth = true
+            self.$parent.globalData.isAuth = true
+            self.$apply()
+            Toast.success('授权成功')
+          })
+        } else {
           this.showDialog = false
-          Toast.fail('拒绝授权将影响应用使用体验')
-          return
+          Toast.fail('拒绝授权将影响使用体验')
         }
-        const resp = await Http.Post('user', {
-          avatarUrl: detail.avatarUrl,
-          nickname: detail.nickName,
-          user_id: userInfo.id
-        })
-        if (resp.code === 1) {
-          userInfo.avatarUrl = detail.avatarUrl
-          userInfo.nickname = detail.nickName
-          this.userInfo = userInfo
-          this.$parent.globalData.userInfo = userInfo
-          db.Set('userInfo', userInfo)
-        }
-        this.showDialog = false
-        this.isAuth = true
-        this.$apply()
-        Toast.success('授权成功')
       }
     }
 
     onLoad() {
-      const userInfo = this.$parent.globalData.userInfo
-      if (userInfo.nickname && userInfo.avatarUrl) {
-        this.userInfo = userInfo
-        this.isAuth = true
-      } else {
-        this.isAuth = false
+      const db = this.$parent.globalData
+      this.isAuth = db.isAuth
+      if (db.isAuth) {
+        this.userInfo = db.userInfo
       }
     }
   }

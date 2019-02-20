@@ -5,75 +5,34 @@
 
     <van-cell-group>
       <van-field
-        value="{{ newUserInfo.name }}"
+        value="{{ newContact.name || '' }}"
         label="姓名"
         placeholder="请输入姓名"
         border="{{ false }}"
         left-icon="contact"
-        bind:change="handleChangeName"
+        @change="handleChangeName"
         maxlength="8"
       />
       <van-field
-        value="{{ newUserInfo.nickname }}"
-        label="昵称"
-        placeholder="请输入昵称"
-        border="{{ false }}"
-        left-icon="contact"
-        bind:change="handleChangeNickname"
-        maxlength="10"
-      />
-      <van-field
-        value="{{ newUserInfo.phone }}"
+        value="{{ newContact.phone || '' }}"
         label="电话"
         placeholder="请输入电话"
         type="number"
         border="{{ false }}"
         left-icon="contact"
-        bind:change="handleChangePhone"
+        @change="handleChangePhone"
         maxlength="11"
-      />
-      <van-field
-        value="{{ newUserInfo.qq }}"
-        label="QQ"
-        placeholder="请输入QQ"
-        type="number"
-        border="{{ false }}"
-        left-icon="contact"
-        bind:change="handleChangeQQ"
-        maxlength="12"
-      />
-      <van-field
-        value="{{ newUserInfo.wechat }}"
-        label="微信号"
-        placeholder="请输入微信号"
-        type="number"
-        border="{{ false }}"
-        left-icon="contact"
-        bind:change="handleChangeWechat"
-        maxlength="20"
-      />
-      <van-field
-        value="{{ newUserInfo.email }}"
-        label="邮箱"
-        placeholder="请输入邮箱"
-        border="{{ false }}"
-        left-icon="contact"
-        bind:change="handleChangeEmail"
-        maxlength="20"
       />
     </van-cell-group>
 
 
-    <van-button size="large" type="primary" loading="{{isLoading}}" @tap="handleSubmit">确定</van-button>
+    <van-button size="large" type="primary" loading="{{loading}}" @tap="handleSubmit">确定</van-button>
     <van-toast id="van-toast"/>
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
-  import Http from '@/utils/http'
-  import db from '@/utils/db'
-  import { validateEmail } from '../utils/validate_input'
 
   import Toast from '../components/vant/toast/toast'
 
@@ -90,80 +49,98 @@
 
     data = {
       isValidEmail: true,
-      isLoading: false,
+      loading: false,
       autofocus: false,
-      newUserInfo: null,
-      userInfo: null
+      contact: null,
+      newContact: null
     }
 
     methods = {
       handleChangeName(e) {
-        this.newUserInfo.name = e.detail
-      },
-      handleChangeNickname(e) {
-        this.newUserInfo.nickname = e.detail
+        this.newContact.name = e.detail
       },
       handleChangePhone(e) {
-        this.newUserInfo.phone = e.detail
-      },
-      handleChangeQQ(e) {
-        this.newUserInfo.qq = e.detail
-      },
-      handleChangeWechat(e) {
-        this.newUserInfo.wechat = e.detail
-      },
-      handleChangeEmail(e) {
-        const email = e.detail
-        this.newUserInfo.email = email
-        if (!this.isValidEmail) {
-          const isValidEmail = validateEmail(email)
-          this.isValidEmail = !!isValidEmail
-        }
+        this.newContact.phone = e.detail
       },
 
-      async handleSubmit() {
-        // 表单验证
-        let isValidSubmit
-        for (const i in this.newUserInfo) {
-          let value = this.newUserInfo[i] !== null && String(this.newUserInfo[i]).replace(/\s+/g, '').length !== 0
-          if (value) {
-            isValidSubmit = true
-          } else {
-            isValidSubmit = false
-            break
-          }
-        }
-        const isValidEmail = validateEmail(this.newUserInfo.email)
-        this.isValidEmail = !!isValidEmail
-        if (!isValidSubmit) {
-          Toast.fail('请完成信息填写')
+      handleSubmit() {
+        const nc = this.newContact
+        let isValid = nc.phone && nc.name
+        if (!isValid) {
+          Toast.fail('请填写完表单')
           return
         }
-        if (!isValidEmail) {
-          Toast.fail('邮箱格式错误')
-          return
-        }
-        // 表单验证 —— END
-        this.loading = true
-        const newUserInfo = Object.assign(this.userInfo, this.newUserInfo)
-        const resp = await Http.Post('user/info', newUserInfo)
-        if (resp.code === 1) {
-          db.Set('userInfo', newUserInfo)
-          this.userInfo = newUserInfo
-          this.$parent.globalData.userInfo = newUserInfo
-          this.loading = false
-          Toast.success('保存成功')
-          setTimeout(() => {
-            Toast.clear()
-            wepy.navigateBack()
-          }, 2000)
-        }
+        this.updateContact()
       }
     }
 
     onLoad() {
-      this.userInfo = this.$parent.globalData.userInfo
-      this.newUserInfo = Object.assign({}, this.$parent.globalData.userInfo)
+      this.loadContact()
     }
-  }
+
+    updateContact() {
+      const self = this
+      const data = {
+        name: self.newContact.name,
+        phone: self.newContact.phone
+      }
+      self.loading = true
+      wx.cloud.callFunction({
+        name: 'updateContact',
+        data: data,
+        success() {
+          wx.getStorage({
+            key: 'contact',
+            complete() {
+              wx.setStorage({
+                key: 'contact',
+                data: data
+              })
+            }
+          })
+          self.loading = false
+          self.$apply()
+          Toast.success('保存成功')
+          setTimeout(() => {
+            Toast.clear()
+            wx.navigateBack()
+          }, 1500)
+        }
+      })
+    }
+
+    loadContact() {
+      const contactStorage = wx.getStorageSync('contact')
+      if (!contactStorage) {
+        console.log('本地没联系缓存，从云数据库拉取数据。。')
+        const self = this
+        const db = wx.cloud.database()
+        const contact = db.collection('contact')
+        const _ = db.command
+        contact.where({
+          _openid: _.eq(wx.getStorageSync('openId'))
+        })
+          .get({
+            success(res) {
+              if (res.data.length) {
+                console.log('云数据库有联系数据！')
+                wx.setStorage({
+                  key: 'contact',
+                  data: res.data[0]
+                })
+                self.contact = res.data[0]
+                self.newContact = res.data[0]
+                self.$apply()
+              } else {
+                console.log('云数据库没有联系数据- -')
+              }
+            }
+          })
+      } else {
+        console.log('本地有联系缓存')
+        this.contact = contactStorage
+        this.newContact = contactStorage
+      }
+    }
+}
 </script>

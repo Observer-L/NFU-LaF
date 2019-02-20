@@ -6,10 +6,7 @@
 <script>
   import wepy from 'wepy'
   import 'wepy-async-function'
-  import db from './utils/db'
-  import Login from './utils/login'
   import { format2FullTime, format2RelativeTime } from './utils/format_time'
-  import Http from './utils/http'
   import { markersStyle } from './config/map'
 
   export default class extends wepy.app {
@@ -59,7 +56,8 @@
 
     globalData = {
       userInfo: null,
-      mapData: []
+      mapData: [],
+      isAuth: false
     }
 
     constructor() {
@@ -72,10 +70,29 @@
         env: 'ufu-laf',
         traceUser: true
       })
-      // new Login().getToken().then(() => {
-      //   this.globalData.userInfo = db.Get('userInfo')
-      // })
-      // this.loadMapData()
+      const self = this
+      this.checkAuth().then(res => {
+        const userInfo = wx.getStorageSync('userInfo')
+        self.globalData.isAuth = res
+        if (res) {
+          if (!userInfo) {
+            console.log('有授权本地没缓存')
+            self.getUserInfo().then(res => {
+              self.globalData.userInfo = res
+              wx.setStorage({
+                key: 'userInfo',
+                data: res
+              })
+            })
+          } else {
+            console.log('有授权本地有缓存')
+            self.globalData.userInfo = userInfo
+          }
+        } else {
+          console.log('没授权清除所有缓存')
+          wx.clearStorage()
+        }
+      })
     }
 
     loadData() {
@@ -118,46 +135,29 @@
       return cleanData
     }
 
-    insertItem(data) {
+    checkAuth() {
       const self = this
-      const db = wx.cloud.database()
-      const items = db.collection('items')
       return new Promise((resolve, reject) => {
-        items.add({
-          data: Object.assign(data, {
-            location: new db.Geo.Point(data.location[1], data.location[0]),
-            reportedTime: db.serverDate(),
-            status: 0
-          })
+        wx.getSetting({
+          success(res) {
+            if (res.authSetting['scope.userInfo']) {
+              self.isAuth = res.authSetting['scope.userInfo']
+            }
+            resolve(self.isAuth)
+          }
         })
-          .then(res => {
-            self.loadData()
-            resolve()
-          })
       })
     }
 
-    // async loadMapData() {
-    //   this.globalData.mapData = []
-    //   const resp = await Http.Get('items')
-    //   const mapData = resp.data
-    //   for (let i = 0; i < mapData.length; i++) {
-    //     for (let j = 0; j < mapData[i].data.length; j++) {
-    //       const POI = mapData[i].data[j]
-    //       POI.width = markersStyle.width
-    //       POI.height = markersStyle.height
-    //       POI.type = mapData[i].type
-    //       POI.iconPath = POI.type === 'LOST' ? '/images/icon/location.png' : '/images/icon/location@found.png'
-    //       POI.label = Object.assign({ content: POI.itemType !== '其他' ? POI.itemType : POI.itemDetail.name }, markersStyle.label)
-    //       POI.itemDetail.fullTime = format2RelativeTime(POI.itemDetail.time) + `（${format2FullTime(POI.itemDetail.time)}）`
-    //       POI.itemDetail.time = format2RelativeTime(POI.itemDetail.time)
-    //       POI.itemDetail.reportedTime = formatRFC2822ToCalendar(POI.itemDetail.reportedTime)
-    //       this.globalData.mapData.push(POI)
-    //     }
-    //   }
-    //   for (const i of this.globalData.mapData) {
-    //     i.type === 'LOST' ? this.globalData.lostMarkers.push(i) : this.globalData.foundMarkers.push(i)
-    //   }
-    // }
+    getUserInfo() {
+      return new Promise((resolve, reject) => {
+        wx.cloud.callFunction({
+          name: 'getUserInfo',
+          success(res) {
+            resolve(res.result.data[0])
+          }
+        })
+      })
+    }
   }
 </script>

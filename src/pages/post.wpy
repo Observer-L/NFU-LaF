@@ -501,7 +501,6 @@
 
 <script>
   import wepy from 'wepy'
-  import Http from '../utils/http'
   import Toast from '../components/vant/toast/toast'
   import { format2FullTime } from '../utils/format_time'
   import { markersStyle, circlesStyle, areas, itemType } from '../config/map'
@@ -628,11 +627,11 @@
             const isCardMode = this.itemTypeOptions.itemType[0] === '证件'
             if (isCardMode) {
               if (!(this.details.cardPic.length && this.details.ownerName && this.details.cardId)) {
-                Toast.fail('请填写完表单1')
+                Toast.fail()
                 return
               }
             } else if (!this.details.pics.length) {
-              Toast.fail('请填写完表单2')
+              Toast.fail()
               return
             }
             this.showStep3 = true
@@ -783,7 +782,7 @@
                   }
                   self.$apply()
                 } else {
-                  Toast.fail('识别失败，请重新选择图片或手动输入证件信息')
+                  Toast.fail()
                 }
               }
             })
@@ -852,12 +851,12 @@
         const self = this
         if (this.normalContact) {
           if (!this.contact.phone) {
-            Toast.fail('请填写联系电话')
+            Toast.fail()
             return
           }
         } else {
           if (!this.contact.point.length) {
-            Toast.fail('请填写指定地点')
+            Toast.fail()
             return
           }
         }
@@ -875,7 +874,7 @@
           contact: this.normalContact ? this.contact : {point: this.contact.point}
         }
         this.loading = true
-        this.$parent.insertItem(data).then(() => {
+        this.insertItem(data).then(() => {
           this.loading = false
           Toast.success('发布成功')
           setTimeout(() => {
@@ -892,6 +891,25 @@
     onLoad(options) {
       this.postType = options.type
       // this.contact = this.$parent.globalData.userInfo
+    }
+
+    insertItem(data) {
+      const self = this
+      const db = wx.cloud.database()
+      const items = db.collection('items')
+      return new Promise((resolve, reject) => {
+        items.add({
+          data: Object.assign(data, {
+            location: new db.Geo.Point(data.location[1], data.location[0]),
+            reportedTime: db.serverDate(),
+            status: 0
+          })
+        })
+          .then(res => {
+            self.$parent.loadData()
+            resolve(res)
+          })
+      })
     }
   }
 </script>
