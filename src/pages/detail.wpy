@@ -59,10 +59,17 @@
         </view>
       </van-panel>
     </view>
-    <van-button size="large" type="primary" @tap="handleMakePhoneCall">
-      <van-icon name="phone-o"></van-icon>
-      联系对方
+
+    <van-button
+      plain
+      size="large"
+      loading="{{loading}}"
+      type="{{action[0] !== '关闭' ? 'primary' : 'warning'}}"
+      @tap="{{action[0] !== '关闭' ? 'handleMakePhoneCall' : 'handleClosePOI'}}">
+      <van-icon name="{{action[1]}}"></van-icon>
+      {{action[0]}}
     </van-button>
+
     <van-popup show="{{ showMap }}" @close="handlePopupMap">
       <map
         id="map"
@@ -77,11 +84,15 @@
         style="width: 80vw; height: 680rpx;"
       ></map>
     </van-popup>
+    <van-toast id="van-toast"/>
+    <van-dialog id="van-dialog" />
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import Toast from '../components/vant/toast/toast'
+  import Dialog from '../components/vant/dialog/dialog'
   import { circlesStyle } from '../config/map'
 
   export default class Detail extends wepy.page {
@@ -92,7 +103,9 @@
         'van-panel': '../components/vant/panel/index',
         'van-button': '../components/vant/button/index',
         'van-popup': '../components/vant/popup/index',
-        'van-icon': '../components/vant/icon/index'
+        'van-icon': '../components/vant/icon/index',
+        'van-toast': '../components/vant/toast/index',
+        'van-dialog': '../components/vant/dialog/index'
       }
     }
 
@@ -106,7 +119,20 @@
         fillColor: circlesStyle.lostColor,
         strokeWidth: circlesStyle.strokeWidth
       }],
-      showMap: false
+      showMap: false,
+      openid: null,
+      loading: false
+    }
+
+    computed = {
+      action() {
+        if (!this.itemData) return false
+        if (this.itemData._openid === this.openid) {
+          return ['关闭', 'close']
+        } else {
+          return this.itemData.type === 'lost' ? ['告知', 'phone-o'] : ['认领', 'phone-o']
+        }
+      }
     }
 
     methods = {
@@ -117,10 +143,54 @@
         wx.makePhoneCall({
           phoneNumber: this.itemData.contact.phone
         })
+      },
+      handleClosePOI() {
+        this.loading = true
+        const self = this
+        Dialog.confirm({
+          title: '关闭确认',
+          message: '是否关闭当前发布？'
+        }).then(() => {
+          // on confirm
+          const db = wx.cloud.database()
+          db.collection('items').doc(self.itemData._id).remove({
+            success() {
+              self.loading = false
+              self.$apply()
+              Toast.success('关闭成功')
+              setTimeout(() => {
+                wx.reLaunch({
+                  url: './index'
+                })
+              }, 1500)
+            }
+          })
+        }).catch(() => {
+          // on cancel
+          self.loading = false
+          self.$apply()
+        })
       }
     }
 
     onLoad(options) {
+      const self = this
+      const openid = wx.getStorageSync('openid')
+      if (!openid) {
+        wx.cloud.callFunction({
+          name: 'getOpenId',
+          complete(res) {
+            wx.setStorage({
+              key: 'openid',
+              data: res.result.openid
+            })
+            self.openid = res.result.openid
+            self.$apply()
+          }
+        })
+      } else {
+        self.openid = openid
+      }
       for (const i of this.$parent.globalData.mapData.markers) {
         if (i.id === options.id) {
           this.itemData = i

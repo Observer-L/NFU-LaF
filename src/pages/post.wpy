@@ -851,12 +851,12 @@
         const self = this
         if (this.normalContact) {
           if (!this.contact.phone) {
-            Toast.fail()
+            Toast.fail('请填写联系电话')
             return
           }
         } else {
           if (!this.contact.point.length) {
-            Toast.fail()
+            Toast.fail('请填写指定地点')
             return
           }
         }
