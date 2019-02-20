@@ -133,6 +133,13 @@
                 self.$apply()
               } else {
                 console.log('云数据库没有联系数据- -')
+                const initContact = {
+                  name: '',
+                  phone: ''
+                }
+                self.contact = initContact
+                self.newContact = initContact
+                db.collection('contact').add({data:initContact})
               }
             }
           })

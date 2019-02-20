@@ -753,6 +753,7 @@
           success(res) {
             self.scanning = true
             self.details.cardPic = res.tempFilePaths
+            self.$apply()
             const imageBase64 = wx.getFileSystemManager().readFileSync(res.tempFilePaths[0], 'base64')
             wx.request({
               url: `https://api-cn.faceplusplus.com/cardpp/v1/ocr${cardType}card`,
@@ -767,6 +768,7 @@
               },
               success(res) {
                 self.scanning = false
+                self.$apply()
                 const cards = res.data[cardType === 'id' ? 'cards' : cardType + '_cards']
                 if (!res.data.error_message && cards.length) {
                   const card = cards[0]
@@ -780,10 +782,11 @@
                       self.details.ownerName = card.bank
                       break
                   }
-                  self.$apply()
                 } else {
-                  Toast.fail()
+                  Toast.fail('识别失败，请确认证件类型重选或手动输入证件信息')
+                  self.details.cardPic = []
                 }
+                self.$apply()
               }
             })
           }
@@ -890,7 +893,21 @@
 
     onLoad(options) {
       this.postType = options.type
+      const self = this
       // this.contact = this.$parent.globalData.userInfo
+      wx.cloud.callFunction({
+        name: 'getContact',
+        success(res) {
+          if (res.result.data.length) {
+            const contact = res.result.data[0]
+            self.contact = {
+              phone: contact.phone,
+              name: contact.name
+            }
+            self.$apply()
+          }
+        }
+      })
     }
 
     insertItem(data) {
