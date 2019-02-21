@@ -23,7 +23,7 @@
     }
   }
   .van-cell__title {
-    flex: 5 !important;
+    /*flex: 5 !important;*/
     word-break: break-all;
   }
 </style>
@@ -48,7 +48,6 @@
       <van-panel
         title="{{itemData.itemName}}"
         desc="{{itemData.desc}}"
-        status="{{itemData.status === 0 ? '进行中' : '已完成'}}"
       >
         <view class="content-wrapper">
           <span class="time">{{itemData.fullTime}}</span>
@@ -153,7 +152,10 @@
         }).then(() => {
           // on confirm
           const db = wx.cloud.database()
-          db.collection('items').doc(self.itemData._id).remove({
+          db.collection('items').doc(self.itemData._id).update({
+            data: {
+              status: 1
+            },
             success() {
               self.loading = false
               self.$apply()

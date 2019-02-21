@@ -97,12 +97,13 @@
 
     loadData() {
       const self = this
-      const db = wx.cloud.database()
-      const items = db.collection('items')
       return new Promise((resolve, reject) => {
-        items.get().then(res => {
-          const markers = self.clearData(res.data)
-          resolve(markers)
+        wx.cloud.callFunction({
+          name: 'getMapPOI',
+          success(res) {
+            const markers = self.clearData(res.result.data)
+            resolve(markers)
+          }
         })
       })
     }
@@ -115,11 +116,12 @@
       }
 
       for (const i of data) {
+        console.log(i.location)
         let POI = Object.assign(i, {
           id: i._id,
           type: i.type,
-          latitude: i.location.latitude,
-          longitude: i.location.longitude,
+          latitude: i.location.coordinates[1],
+          longitude: i.location.coordinates[0],
           width: markersStyle.width,
           height: markersStyle.height,
           reportedTime: format2RelativeTime(i.reportedTime),
