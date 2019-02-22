@@ -13,6 +13,10 @@
     .menu, .filter {
       width: 72rpx;
       text-align: center;
+      transition: width .2s ease-in-out;
+      &.hide {
+        width: 0;
+      }
     }
   }
 
@@ -96,15 +100,57 @@
   .card-wrapper {
     padding: 20rpx;
   }
+
+  .search-tabs {
+    .scroll-labels {
+      background: #fff;
+      border-bottom: 2px solid #eee;
+    }
+    .inner-tabs {
+      display: flex;
+      justify-content: space-around;
+      font-size: 14px;
+      padding: 20rpx;
+      box-sizing: border-box;
+    }
+    label {
+      padding: 0 12px;
+      &.active {
+        color: tomato;
+      }
+    }
+  }
+  .search_results {
+    .item {
+    }
+    .lost {
+      color: @lostColor;
+    }
+    .found {
+      color: @foundColor;
+    }
+  }
 </style>
 <template>
   <view>
     <view class="header">
-      <i class="iconfont icon-menu menu" @tap="handleToggleLeftMenu"></i>
-      <van-search value="{{ value }}" placeholder="请输入搜索关键词" class="search"/>
-      <i class="iconfont filter {{showMapFilter ? 'icon-close' : 'icon-filter-fill'}}" @tap="handleToggleMapFilter"></i>
+
+       <i class="iconfont icon-menu menu {{showSearchSection ? 'hide' : ''}}" @tap="handleToggleLeftMenu"></i>
+
+      <van-search
+        value="{{ searchKeywords }}"
+        placeholder="物品关键词/丢失区域..."
+        class="search"
+        use-action-slot="{{!!showSearchSection}}"
+        @focus="showSearchSection"
+      >
+        <view slot="action" @tap="handleSearchCancel">取消</view>
+      </van-search>
+
+      <i class="iconfont filter {{showMapFilter ? 'icon-close' : 'icon-filter-fill'}} {{showSearchSection ? 'hide' : ''}}" @tap="handleToggleMapFilter"></i>
     </view>
 
+    <van-transition show="{{ !showSearchSection }}" custom-class="fade-down">
     <view class="map" style="{{showLeftMenu ? 'margin-left: 50%' : ''}}">
       <map
         id="map"
@@ -141,9 +187,100 @@
     </view>
 
     <view class="card-wrapper">
-      <van-transition show="{{ showCard }}" class="card" name="fade-down">
+      <van-transition show="{{ showCard }}" class="card" name="fade-up">
         <Card :info.sync="targetPOI"></Card>
       </van-transition>
+    </view>
+    </van-transition>
+
+      <van-tabs
+        class="search-tabs"
+        wx:if="{{showSearchSection}}"
+        sticky="{{true}}"
+        animated
+        @click="handleSwitchTab"
+        active="{{activeTab}}"
+      >
+        <van-tab title="区域">
+          <scroll-view scroll-x style="width: 100%" scroll-into-view="{{targetAreaTab}}" class="scroll-labels">
+            <view class="inner-tabs areas" style="width:{{innerAreasTabsWidth}}px">
+              <label
+                wx:for="{{areasKeys}}"
+                wx:key="{{index}}"
+                class="{{targetAreaTab === 'i'+index ? 'active' : ''}}"
+                id="{{'i'+index}}"
+                data-area = "{{item}}"
+                @tap="handleSwitchAreasTab"
+              >
+                {{item}}
+              </label>
+            </view>
+          </scroll-view>
+        </van-tab>
+        <van-tab title="物品类型">
+          <scroll-view scroll-x style="width: 100%" scroll-into-view="{{targetItemTypeTab}}" class="scroll-labels">
+            <view class="inner-tabs item-type" style="width:{{innerItemTypeTabsWidth}}px">
+              <label
+                wx:for="{{itemTypeKeys}}"
+                wx:key="{{index}}"
+                class="{{targetItemTypeTab === 'i'+index ? 'active' : ''}}"
+                data-item-type= "{{item}}"
+                id="{{'i'+index}}"
+                @tap="handleSwitchItemTypeTab"
+              >
+                {{item}}
+              </label>
+            </view>
+          </scroll-view>
+        </van-tab>
+      </van-tabs>
+
+    <view class="search_results" wx:if="{{showSearchSection}}">
+      <van-cell-group class="areas" wx:if="{{activeTab === 0}}">
+        <block
+          wx:for="{{searchList.areas}}"
+          wx:if="{{searchList.areas[index].length}}"
+          wx:for-item="area"
+          wx:key="{{index}}"
+        >
+          <van-cell
+            custom-class="{{item.type}} item"
+            wx:for="{{area}}"
+            wx:key="{{item._id}}"
+            title="{{item.itemName}}"
+            value="{{item.time}}"
+            label="{{item.desc}}"
+            is-link
+            border="{{ false }}"
+          >
+            <!--<view slot="title">-->
+              <!--<view class="van-cell-text">{{item.itemName}}</view>-->
+              <!--<van-tag type="{{item.type === 'lost' ? 'danger' : 'primary'}}">{{item.type}}</van-tag>-->
+            <!--</view>-->
+          </van-cell>
+        </block>
+      </van-cell-group>
+
+      <van-cell-group class="item-type" wx:else>
+        <block
+          wx:for="{{searchList.itemType}}"
+          wx:if="{{searchList.itemType[index].length}}"
+          wx:for-item="itemType"
+          wx:key="{{index}}"
+        >
+          <van-cell
+            custom-class="{{item.type}} item"
+            wx:for="{{itemType}}"
+            title="{{item.itemName}}"
+            value="{{item.time}}"
+            label="{{item.desc}}"
+            is-link
+            border="{{ false }}"
+          >
+          </van-cell>
+        </block>
+      </van-cell-group>
+
     </view>
 
     <van-popup show="{{ showLeftMenu }}" @close="handleToggleLeftMenu" position="left"
@@ -157,6 +294,7 @@
 <script>
   import wepy from 'wepy'
   import Card from '../components/card'
+  import {areas, itemType} from '../config/map'
 
   export default class Index extends wepy.page {
     config = {
@@ -166,7 +304,11 @@
         'van-card': '../components/vant/card/index',
         'van-search': '../components/vant/search/index',
         'van-transition': '../components/vant/transition/index',
-        'van-popup': '../components/vant/popup/index'
+        'van-popup': '../components/vant/popup/index',
+        'van-tab': '../components/vant/tab/index',
+        'van-tabs': '../components/vant/tabs/index',
+        'van-cell': '../components/vant/cell/index',
+        'van-tag': '../components/vant/tag/index'
       }
     }
 
@@ -178,7 +320,12 @@
       isActive: false,
       markers: [],
       targetPOI: null,
+      targetAreaTab: null,
+      targetItemTypeTab: null,
       showCard: false,
+      showSearchSection: false,
+      searchKeywords: '',
+      activeTab: 0,
       showLeftMenu: false,
       showMapFilter: false,
       selectedFilter: {
@@ -186,7 +333,39 @@
         found: true
       },
       lostMarkers: [],
-      foundMarkers: []
+      foundMarkers: [],
+      areas,
+      itemType,
+      cats: {
+        areas: {},
+        itemType: {}
+      },
+      searchList: {
+        areas: {},
+        itemType: {}
+      }
+    }
+
+    computed = {
+      windowWidth() {
+        return wx.getSystemInfoSync().windowWidth
+      },
+      innerAreasTabsWidth() {
+        const ak = Object.keys(areas)
+        const wd = wx.getSystemInfoSync().windowWidth
+        return ak.length * 60 <= wd ? wd : ak.length * 60
+      },
+      innerItemTypeTabsWidth() {
+        const it = Object.keys(itemType)
+        const wd = wx.getSystemInfoSync().windowWidth
+        return it.length * 60 <= wd ? wd : it.length * 60
+      },
+      areasKeys() {
+        return Object.keys(areas)
+      },
+      itemTypeKeys() {
+        return Object.keys(itemType)
+      }
     }
 
     methods = {
@@ -231,6 +410,40 @@
             this.markers = []
           }
         }
+      },
+      showSearchSection() {
+        this.showSearchSection = true
+        wx.hideTabBar({
+          animation: true
+        })
+      },
+      handleSearchCancel() {
+        this.showSearchSection = false
+        wx.showTabBar({
+          animation: true
+        })
+      },
+      handleSwitchTab(e) {
+        this.activeTab = e.detail.index
+        if (e.detail.index === 0) {
+          this.searchList.areas = this.cats.areas
+          this.targetAreaTab = ''
+        } else {
+          this.searchList.itemType = this.cats.itemType
+          this.targetItemTypeTab = ''
+        }
+      },
+      handleSwitchAreasTab(e) {
+        this.targetAreaTab = e.target.id
+        const key = e.currentTarget.dataset.area
+        this.searchList.areas = {}
+        this.searchList.areas[key] = this.cats.areas[key]
+      },
+      handleSwitchItemTypeTab(e) {
+        this.targetItemTypeTab = e.target.id
+        const key = e.currentTarget.dataset.itemType
+        this.searchList.itemType = {}
+        this.searchList.itemType[key] = this.cats.itemType[key]
       }
     }
 
@@ -241,7 +454,30 @@
         self.lostMarkers = res.lostMarkers
         self.foundMarkers = res.foundMarkers
         self.$apply()
+        this.setPOICat()
       })
+    }
+
+    setPOICat() {
+      for (const i of Object.keys(areas)) {
+        this.cats.areas[i] = []
+        for (const j of this.markers) {
+          if (j.area[0] === i) {
+            this.cats.areas[i].push(j)
+          }
+        }
+      }
+      for (const i of Object.keys(itemType)) {
+        this.cats.itemType[i] = []
+        for (const j of this.markers) {
+          if (j.itemType === i) {
+            this.cats.itemType[i].push(j)
+          }
+        }
+      }
+      this.searchList.areas = this.cats.areas
+      this.searchList.itemType = this.cats.itemType
+      console.log(this.cats)
     }
   }
 </script>

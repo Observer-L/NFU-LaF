@@ -72,8 +72,8 @@
     <van-popup show="{{ showMap }}" @close="handlePopupMap">
       <map
         id="map"
-        longitude="{{itemData.location.longitude}}"
-        latitude="{{itemData.location.latitude}}"
+        longitude="{{itemData.longitude}}"
+        latitude="{{itemData.latitude}}"
         scale="18"
         show-location
         enable-rotate="{{true}}"
@@ -196,8 +196,8 @@
       for (const i of this.$parent.globalData.mapData.markers) {
         if (i.id === options.id) {
           this.itemData = i
-          this.circles[0].latitude = i.location.latitude
-          this.circles[0].longitude = i.location.longitude
+          this.circles[0].latitude = i.latitude
+          this.circles[0].longitude = i.longitude
           this.circles[0].radius = i.area[2]
           this.circles[0].fillColor = i.type === 'lost' ? circlesStyle.lostColor + '80' : circlesStyle.foundColor + '80'
           this.circles[0].color = i.type === 'lost' ? circlesStyle.lostColor + '50' : circlesStyle.foundColor + '50'
