@@ -22,10 +22,6 @@
       }
     }
   }
-  .van-cell__title {
-    /*flex: 5 !important;*/
-    word-break: break-all;
-  }
 </style>
 <template>
   <view>

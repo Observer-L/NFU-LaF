@@ -752,7 +752,14 @@
           sourceType: ['album', 'camera'],
           success(res) {
             self.scanning = true
-            self.details.cardPic = res.tempFilePaths
+            wx.cloud.uploadFile({
+              cloudPath: Math.random() * 1000000 + res.tempFilePaths[0].match(/\.[^.]+?$/)[0], // 上传至云端的路径
+              filePath: res.tempFilePaths[0], // 小程序临时文件路径
+              success: res => {
+                // 返回文件 ID
+                self.details.cardPic = [res.fileID]
+              }
+            })
             self.$apply()
             const imageBase64 = wx.getFileSystemManager().readFileSync(res.tempFilePaths[0], 'base64')
             wx.request({
@@ -831,14 +838,23 @@
         this.details.desc = ''
       },
       handleAddPics() {
+        if (this.details.pics.length === 3) {
+          Toast.fail('只能上传三张图片')
+          return
+        }
         const self = this
         wx.chooseImage({
           count: 3,
           sizeType: ['original', 'compressed'],
           sourceType: ['album', 'camera'],
           success(res) {
-            self.details.pics = self.details.pics.concat(res.tempFilePaths)
-            console.log(self.details.pics)
+            wx.cloud.uploadFile({
+              cloudPath: Math.random() * 1000000 + res.tempFilePaths[0].match(/\.[^.]+?$/)[0],
+              filePath: res.tempFilePaths[0],
+              success: res => {
+                self.details.pics = self.details.pics.concat(res.fileID)
+              }
+            })
             self.$apply()
           }
         })
