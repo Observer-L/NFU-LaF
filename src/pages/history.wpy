@@ -9,6 +9,7 @@
         wx:key="{{index}}"
         custom-class="{{item.type}} item"
         id="{{item._id}}"
+        data-status="{{item.status}}"
         title="{{item.itemName}}"
         value="{{item.status === 0 ? '进行中' : '已关闭'}}"
         label="{{item.desc}}"
@@ -40,7 +41,7 @@
     methods = {
       handleClickItem(e) {
         wx.navigateTo({
-          url: '/pages/detail?id=' + e.target.id
+          url: `/pages/detail?id=${e.target.id}&status=${e.currentTarget.dataset.status}`
         })
       }
     }

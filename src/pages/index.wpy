@@ -56,7 +56,9 @@
       position:absolute;
       right:0;
       top:0;
-      padding: 0 20rpx 20rpx 20rpx;
+      /*padding: 0 20rpx 20rpx 20rpx;*/
+      width: 136rpx;
+      height: 136rpx;
       background:#f8f8f8;
       color: #fff;
       transition: transform .2s ease-out;
@@ -66,7 +68,9 @@
         transform: translateX(0);
       }
       .lost, .found {
-        padding: 8rpx;
+        height: 50%;
+        line-height: 60rpx;
+        /*padding: 8rpx;*/
         font-size: 14px;
         text-align: center;
         background: rgba(0,0,0,.2);
@@ -177,7 +181,7 @@
           <cover-view class="action-btn">
             <cover-view class="options {{isActive ? 'show' : ''}}">
               <cover-view class="option lost" id="lost" @tap="handleClickAction">失物</cover-view>
-              <cover-view class="option found" id="found" @tap="handleClickAction">拾物</cover-view>
+              <cover-view class="option found" id="found" @tap="handleClickAction">招领</cover-view>
             </cover-view>
             <cover-view class="toggle-btn" @tap="handleToggleAction">
               {{isActive ? 'x' : '+'}}

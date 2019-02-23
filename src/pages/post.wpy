@@ -48,12 +48,13 @@
     justify-content: center;
     font-size: 46rpx;
     background: #eee;
-    padding: 20rpx;
+    padding: 36rpx;
 
     .placeholder {
       font-size: 70%;
       color: #aaa;
-      border-bottom: 1px solid #000;
+      /*border-bottom: 1px solid #000;*/
+      text-decoration: underline;
     }
   }
 
@@ -76,16 +77,21 @@
     bottom: 0;
     right: 0;
     width: 120rpx;
-    height: 120rpx;
+    height: 60rpx;
     margin: 0 8rpx 8rpx 0;
     background: #000;
     color: #fff;
-    line-height: 120rpx;
+    font-size: 16px;
+    line-height: 60rpx;
     text-align: center;
   }
 
-  .item-detail {
+  .item-details {
     align-items: center;
+    .title {
+      padding:26rpx;
+      font-size:16px;
+    }
   }
 
   .mask {
@@ -95,8 +101,6 @@
   }
 
   .title {
-    font-size: 16px;
-    padding: 26rpx;
   }
 
   .upload-wrapper {
@@ -323,7 +327,7 @@
           </view>
         </view>
 
-        <view class="item-details" wx:if="{{itemTypeOptions.itemType[0] !== '证件'}}">
+        <view class="item-details van-hairline--top" wx:if="{{itemTypeOptions.itemType[0] !== '证件'}}">
           <block wx:if="{{itemTypeOptions.itemType.length}}">
             <view class="title">物品的更多信息（可选）</view>
             <van-field
@@ -627,11 +631,11 @@
             const isCardMode = this.itemTypeOptions.itemType[0] === '证件'
             if (isCardMode) {
               if (!(this.details.cardPic.length && this.details.ownerName && this.details.cardId)) {
-                Toast.fail()
+                Toast.fail('请填写完成卡片表单')
                 return
               }
             } else if (!this.details.pics.length) {
-              Toast.fail()
+              Toast.fail('请填写完成表单')
               return
             }
             this.showStep3 = true
@@ -751,6 +755,7 @@
           sizeType: ['original', 'compressed'],
           sourceType: ['album', 'camera'],
           success(res) {
+            self.details.cardPic = res.tempFilePaths
             self.scanning = true
             wx.cloud.uploadFile({
               cloudPath: Math.random() * 1000000 + res.tempFilePaths[0].match(/\.[^.]+?$/)[0], // 上传至云端的路径
@@ -758,6 +763,7 @@
               success: res => {
                 // 返回文件 ID
                 self.details.cardPic = [res.fileID]
+                self.$apply()
               }
             })
             self.$apply()
@@ -774,6 +780,7 @@
                 image_base64: imageBase64
               },
               success(res) {
+                console.log(res)
                 self.scanning = false
                 self.$apply()
                 const cards = res.data[cardType === 'id' ? 'cards' : cardType + '_cards']
@@ -794,6 +801,9 @@
                   self.details.cardPic = []
                 }
                 self.$apply()
+              },
+              fail(res) {
+                console.log(res)
               }
             })
           }
@@ -853,9 +863,9 @@
               filePath: res.tempFilePaths[0],
               success: res => {
                 self.details.pics = self.details.pics.concat(res.fileID)
+                self.$apply()
               }
             })
-            self.$apply()
           }
         })
       },
@@ -910,7 +920,6 @@
     onLoad(options) {
       this.postType = options.type
       const self = this
-      // this.contact = this.$parent.globalData.userInfo
       wx.cloud.callFunction({
         name: 'getContact',
         success(res) {

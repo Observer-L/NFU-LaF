@@ -96,7 +96,7 @@
   <view class="item {{info.type}}">
     <view class="item_title">
       <view class="item_status">
-        <text>{{info.type}}</text>
+        <text>{{infoType}}</text>
       </view>
       <view class="item_reported_time">
         <text class="item_reported_time_prefix">发布时间：</text>
@@ -130,6 +130,14 @@ import wepy from 'wepy'
 export default class Card extends wepy.component {
   props = {
     info: Object
+  }
+
+  computed = {
+    infoType() {
+      if (this.info) {
+        return this.info.type.toUpperCase()
+      }
+    }
   }
 
   methods = {

@@ -21,6 +21,13 @@
         color: @lostColor;
       }
     }
+    .content-wrapper {
+      padding: 26rpx;
+      font-size: 14px;
+      .place {
+        font-size: 120%;
+      }
+    }
   }
 </style>
 <template>
@@ -46,14 +53,21 @@
         desc="{{itemData.desc}}"
       >
         <view class="content-wrapper">
-          <span class="time">{{itemData.fullTime}}</span>
-          在
+          <span class="time">{{itemData.fullTime}}在</span>
           <span class="place"
-                @tap="handlePopupMap">{{itemData.area[0] + itemData.area[1]}}</span>
+                @tap="handlePopupMap">{{itemData.area[0] + (itemData.area[1] !== '其他' ? itemData.area[1] : '')}}</span>
           <span class="action">{{itemData.type === 'lost' ? '丢失' : '捡到'}}</span>
         </view>
       </van-panel>
     </view>
+
+    <van-button
+      open-type='share'
+      plain
+      size="large"
+    >
+      分享
+    </van-button>
 
     <van-button
       plain
@@ -88,7 +102,8 @@
   import wepy from 'wepy'
   import Toast from '../components/vant/toast/toast'
   import Dialog from '../components/vant/dialog/dialog'
-  import { circlesStyle } from '../config/map'
+  import { circlesStyle, markersStyle } from '../config/map'
+  import { format2FullTime, format2RelativeTime } from '../utils/format_time'
 
   export default class Detail extends wepy.page {
     config = {
@@ -173,6 +188,40 @@
 
     onLoad(options) {
       const self = this
+      if (options.source === 'share' || options.status === '1') {
+        wx.cloud.callFunction({
+          name: 'getItemById',
+          data: {
+            id: options.id
+          },
+          success(res) {
+            console.log(res)
+            let result = res.result.data
+            result = Object.assign(result, {
+              reportedTime: format2RelativeTime(result.reportedTime),
+              time: format2FullTime(result.time),
+              latitude: result.location.coordinates[1],
+              longitude: result.location.coordinates[0],
+              width: markersStyle.width,
+              height: markersStyle.height,
+              fullTime: format2RelativeTime(result.time) + `（${format2FullTime(result.time)}）`,
+              iconPath: result.type === 'lost' ? '/images/icon/location.png' : '/images/icon/location@found.png',
+              label: Object.assign({ content: result.itemType !== '其他' ? result.itemType : result.itemName }, markersStyle.label)
+            })
+            self.circles[0].latitude = result.latitude
+            self.circles[0].longitude = result.longitude
+            self.circles[0].radius = result.area[2]
+            self.circles[0].fillColor = result.type === 'lost' ? circlesStyle.lostColor + '80' : circlesStyle.foundColor + '80'
+            self.circles[0].color = result.type === 'lost' ? circlesStyle.lostColor + '50' : circlesStyle.foundColor + '50'
+            self.itemData = result
+            self.$apply()
+          },
+          fail(e) {
+            console.log(e)
+          }
+        })
+        return
+      }
       const openid = wx.getStorageSync('openid')
       if (!openid) {
         wx.cloud.callFunction({
@@ -199,6 +248,14 @@
           this.circles[0].color = i.type === 'lost' ? circlesStyle.lostColor + '50' : circlesStyle.foundColor + '50'
           break
         }
+      }
+    }
+
+    onShareAppMessage () {
+      return {
+        title: '南苑寻物',
+        desc: '你是不是丢了什么东西？',
+        path: `/pages/detail?id=${this.itemData._id}&source=share`
       }
     }
   }
