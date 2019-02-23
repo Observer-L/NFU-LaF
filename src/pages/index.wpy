@@ -130,12 +130,18 @@
       color: @foundColor;
     }
   }
+
+  .nomore {
+    padding: 32rpx;
+    color: #d8d8d8;
+    text-align: center;
+  }
 </style>
 <template>
   <view>
     <view class="header">
 
-       <i class="iconfont icon-menu menu {{showSearchSection ? 'hide' : ''}}" @tap="handleToggleLeftMenu"></i>
+      <i class="iconfont icon-menu menu {{showSearchSection ? 'hide' : ''}}" @tap="handleToggleLeftMenu"></i>
 
       <van-search
         value="{{ searchKeywords }}"
@@ -143,145 +149,182 @@
         class="search"
         use-action-slot="{{!!showSearchSection}}"
         @focus="showSearchSection"
+        @change="handleSearchInput"
       >
         <view slot="action" @tap="handleSearchCancel">取消</view>
       </van-search>
 
-      <i class="iconfont filter {{showMapFilter ? 'icon-close' : 'icon-filter-fill'}} {{showSearchSection ? 'hide' : ''}}" @tap="handleToggleMapFilter"></i>
+      <i
+        class="iconfont filter {{showMapFilter ? 'icon-close' : 'icon-filter-fill'}} {{showSearchSection ? 'hide' : ''}}"
+        @tap="handleToggleMapFilter"></i>
     </view>
 
     <van-transition show="{{ !showSearchSection }}" custom-class="fade-down">
-    <view class="map" style="{{showLeftMenu ? 'margin-left: 50%' : ''}}">
-      <map
-        id="map"
-        longitude="113.679121"
-        latitude="23.632366"
-        scale="16"
-        show-location
-        enable-rotate="{{true}}"
-        enable-3D="{{true}}"
-        markers="{{markers}}"
-        @markertap="handleMarkerTap"
-        @tap="handleMapTap"
-        style="width: 100%; height: 680rpx;"
-      >
-        <cover-view class="action-btn">
-          <cover-view class="options {{isActive ? 'show' : ''}}">
-            <cover-view class="option lost" id="lost" @tap="handleClickAction">失物</cover-view>
-            <cover-view class="option found" id="found" @tap="handleClickAction">拾物</cover-view>
+      <view class="map" style="{{showLeftMenu ? 'margin-left: 50%' : ''}}">
+        <map
+          id="map"
+          longitude="113.679121"
+          latitude="23.632366"
+          scale="16"
+          show-location
+          enable-rotate="{{true}}"
+          enable-3D="{{true}}"
+          markers="{{markers}}"
+          @markertap="handleMarkerTap"
+          @tap="handleMapTap"
+          style="width: 100%; height: 680rpx;"
+        >
+          <cover-view class="action-btn">
+            <cover-view class="options {{isActive ? 'show' : ''}}">
+              <cover-view class="option lost" id="lost" @tap="handleClickAction">失物</cover-view>
+              <cover-view class="option found" id="found" @tap="handleClickAction">拾物</cover-view>
+            </cover-view>
+            <cover-view class="toggle-btn" @tap="handleToggleAction">
+              {{isActive ? 'x' : '+'}}
+            </cover-view>
           </cover-view>
-          <cover-view class="toggle-btn" @tap="handleToggleAction">
-            {{isActive ? 'x' : '+'}}
+
+          <cover-view class="filter {{showMapFilter ? 'active' : ''}}" @tap="toggleSelectedFilter">
+            <cover-view class="lost {{selectedFilter.lost ? 'selected' : ''}}" id="lost">LOST</cover-view>
+            <cover-view class="found {{selectedFilter.found ? 'selected' : ''}}" id="found">FOUND</cover-view>
           </cover-view>
-        </cover-view>
 
-        <cover-view class="filter {{showMapFilter ? 'active' : ''}}" @tap="toggleSelectedFilter">
-          <cover-view class="lost {{selectedFilter.lost ? 'selected' : ''}}" id="lost">LOST</cover-view>
-          <cover-view class="found {{selectedFilter.found ? 'selected' : ''}}" id="found">FOUND</cover-view>
-        </cover-view>
+          <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}"
+                      @tap="handleToggleLeftMenu"></cover-view>
 
-        <cover-view class="mask" style="{{showLeftMenu ? 'display: block;' : ''}}"
-                    @tap="handleToggleLeftMenu"></cover-view>
+        </map>
+      </view>
 
-      </map>
-    </view>
-
-    <view class="card-wrapper">
-      <van-transition show="{{ showCard }}" class="card" name="fade-up">
-        <Card :info.sync="targetPOI"></Card>
-      </van-transition>
-    </view>
+      <view class="card-wrapper">
+        <van-transition show="{{ showCard }}" class="card" name="fade-up">
+          <Card :info.sync="targetPOI"></Card>
+        </van-transition>
+      </view>
     </van-transition>
 
-      <van-tabs
-        class="search-tabs"
-        wx:if="{{showSearchSection}}"
-        sticky="{{true}}"
-        animated
-        @click="handleSwitchTab"
-        active="{{activeTab}}"
-      >
-        <van-tab title="区域">
-          <scroll-view scroll-x style="width: 100%" scroll-into-view="{{targetAreaTab}}" class="scroll-labels">
-            <view class="inner-tabs areas" style="width:{{innerAreasTabsWidth}}px">
-              <label
-                wx:for="{{areasKeys}}"
-                wx:key="{{index}}"
-                class="{{targetAreaTab === 'i'+index ? 'active' : ''}}"
-                id="{{'i'+index}}"
-                data-area = "{{item}}"
-                @tap="handleSwitchAreasTab"
-              >
-                {{item}}
-              </label>
-            </view>
-          </scroll-view>
-        </van-tab>
-        <van-tab title="物品类型">
-          <scroll-view scroll-x style="width: 100%" scroll-into-view="{{targetItemTypeTab}}" class="scroll-labels">
-            <view class="inner-tabs item-type" style="width:{{innerItemTypeTabsWidth}}px">
-              <label
-                wx:for="{{itemTypeKeys}}"
-                wx:key="{{index}}"
-                class="{{targetItemTypeTab === 'i'+index ? 'active' : ''}}"
-                data-item-type= "{{item}}"
-                id="{{'i'+index}}"
-                @tap="handleSwitchItemTypeTab"
-              >
-                {{item}}
-              </label>
-            </view>
-          </scroll-view>
-        </van-tab>
-      </van-tabs>
-
-    <view class="search_results" wx:if="{{showSearchSection}}">
-      <van-cell-group class="areas" wx:if="{{activeTab === 0}}">
-        <block
-          wx:for="{{searchList.areas}}"
-          wx:if="{{searchList.areas[index].length}}"
-          wx:for-item="area"
-          wx:key="{{index}}"
+    <block wx:if="{{showSearchSection}}">
+      <block wx:if="{{!searchKeywords.length}}">
+        <van-tabs
+          class="search-tabs"
+          sticky="{{true}}"
+          animated
+          @click="handleSwitchTab"
+          active="{{activeTab}}"
         >
-          <van-cell
-            custom-class="{{item.type}} item"
-            wx:for="{{area}}"
-            wx:key="{{item._id}}"
-            title="{{item.itemName}}"
-            value="{{item.time}}"
-            label="{{item.desc}}"
-            is-link
-            border="{{ false }}"
-          >
-            <!--<view slot="title">-->
-              <!--<view class="van-cell-text">{{item.itemName}}</view>-->
-              <!--<van-tag type="{{item.type === 'lost' ? 'danger' : 'primary'}}">{{item.type}}</van-tag>-->
-            <!--</view>-->
-          </van-cell>
-        </block>
-      </van-cell-group>
+          <van-tab title="区域">
+            <scroll-view scroll-x style="width: 100%" scroll-into-view="{{targetAreaTab}}" class="scroll-labels">
+              <view class="inner-tabs areas" style="width:{{innerAreasTabsWidth}}px">
+                <label
+                  wx:for="{{areasKeys}}"
+                  wx:key="{{index}}"
+                  class="{{targetAreaTab === 'i'+index ? 'active' : ''}}"
+                  id="{{'i'+index}}"
+                  data-area="{{item}}"
+                  @tap="handleSwitchAreasTab"
+                >
+                  {{item}}
+                </label>
+              </view>
+            </scroll-view>
+          </van-tab>
+          <van-tab title="物品类型">
+            <scroll-view scroll-x style="width: 100%" scroll-into-view="{{targetItemTypeTab}}" class="scroll-labels">
+              <view class="inner-tabs item-type" style="width:{{innerItemTypeTabsWidth}}px">
+                <label
+                  wx:for="{{itemTypeKeys}}"
+                  wx:key="{{index}}"
+                  class="{{targetItemTypeTab === 'i'+index ? 'active' : ''}}"
+                  data-item-type="{{item}}"
+                  id="{{'i'+index}}"
+                  @tap="handleSwitchItemTypeTab"
+                >
+                  {{item}}
+                </label>
+              </view>
+            </scroll-view>
+          </van-tab>
+        </van-tabs>
 
-      <van-cell-group class="item-type" wx:else>
-        <block
-          wx:for="{{searchList.itemType}}"
-          wx:if="{{searchList.itemType[index].length}}"
-          wx:for-item="itemType"
-          wx:key="{{index}}"
-        >
-          <van-cell
-            custom-class="{{item.type}} item"
-            wx:for="{{itemType}}"
-            title="{{item.itemName}}"
-            value="{{item.time}}"
-            label="{{item.desc}}"
-            is-link
-            border="{{ false }}"
-          >
-          </van-cell>
-        </block>
-      </van-cell-group>
+        <view class="search_results">
+          <van-cell-group class="areas" wx:if="{{activeTab === 0}}">
+            <block
+              wx:for="{{searchList.areas}}"
+              wx:if="{{searchList.areas[index].length}}"
+              wx:for-item="area"
+              wx:key="{{index}}"
+            >
+              <van-cell
+                custom-class="{{item.type}} item"
+                wx:for="{{area}}"
+                wx:key="{{item._id}}"
+                id="{{item._id}}"
+                title="{{item.itemName}}"
+                value="{{item.time}}"
+                label="{{item.desc}}"
+                is-link
+                @tap="handleClickItem"
+                border="{{ false }}"
+              >
+                <!--<view slot="title">-->
+                <!--<view class="van-cell-text">{{item.itemName}}</view>-->
+                <!--<van-tag type="{{item.type === 'lost' ? 'danger' : 'primary'}}">{{item.type}}</van-tag>-->
+                <!--</view>-->
+              </van-cell>
+            </block>
+          </van-cell-group>
 
-    </view>
+          <van-cell-group class="item-type" wx:else>
+            <block
+              wx:if="{{searchList.itemType[index].length}}"
+              wx:for="{{searchList.itemType}}"
+              wx:for-item="itemType"
+              wx:key="{{index}}"
+            >
+              <van-cell
+                custom-class="{{item.type}} item"
+                wx:for="{{itemType}}"
+                wx:key="{{item._id}}"
+                id="{{item._id}}"
+                title="{{item.itemName}}"
+                value="{{item.time}}"
+                label="{{item.desc}}"
+                is-link
+                @tap="handleClickItem"
+                border="{{ false }}"
+              >
+              </van-cell>
+            </block>
+          </van-cell-group>
+
+          <view wx:if="{{activeTab === 1 && !searchList.itemType[searchListIT[0]].length}}" class="nomore">
+            还没有这种东西
+          </view>
+          <view wx:if="{{activeTab === 0 && !searchList.areas[searchListAreas[0]].length}}" class="nomore">
+            这里没有这东西
+          </view>
+
+        </view>
+      </block>
+      <block wx:else>
+        <view class="search_results">
+          <van-cell-group class="results">
+            <van-cell
+              custom-class="{{item.type}} item"
+              wx:for="{{searchList.result}}"
+              wx:key="{{index}}"
+              id="{{item._id}}"
+              title="{{item.itemName}}"
+              value="{{item.time}}"
+              label="{{item.desc}}"
+              is-link
+              @tap="handleClickItem"
+              border="{{ false }}"
+            >
+            </van-cell>
+          </van-cell-group>
+        </view>
+      </block>
+    </block>
 
     <van-popup show="{{ showLeftMenu }}" @close="handleToggleLeftMenu" position="left"
                custom-style="width: 50%;height: 100%;">
@@ -294,7 +337,7 @@
 <script>
   import wepy from 'wepy'
   import Card from '../components/card'
-  import {areas, itemType} from '../config/map'
+  import { areas, itemType } from '../config/map'
 
   export default class Index extends wepy.page {
     config = {
@@ -342,7 +385,8 @@
       },
       searchList: {
         areas: {},
-        itemType: {}
+        itemType: {},
+        result: []
       }
     }
 
@@ -365,6 +409,12 @@
       },
       itemTypeKeys() {
         return Object.keys(itemType)
+      },
+      searchListIT() {
+        return Object.keys(this.searchList.itemType)
+      },
+      searchListAreas() {
+        return Object.keys(this.searchList.areas)
       }
     }
 
@@ -419,9 +469,19 @@
       },
       handleSearchCancel() {
         this.showSearchSection = false
+        this.searchKeywords = ''
         wx.showTabBar({
           animation: true
         })
+      },
+      handleSearchInput(e) {
+        this.searchList.result = []
+        this.searchKeywords = e.detail
+        for (const i of this.markers) {
+          if (i.itemName.includes(e.detail) || i.itemType.includes(e.detail) || i.area.includes(e.detail)) {
+            this.searchList.result.push(i)
+          }
+        }
       },
       handleSwitchTab(e) {
         this.activeTab = e.detail.index
@@ -444,6 +504,11 @@
         const key = e.currentTarget.dataset.itemType
         this.searchList.itemType = {}
         this.searchList.itemType[key] = this.cats.itemType[key]
+      },
+      handleClickItem(e) {
+        wx.navigateTo({
+          url: '/pages/detail?id=' + e.target.id
+        })
       }
     }
 
@@ -477,7 +542,6 @@
       }
       this.searchList.areas = this.cats.areas
       this.searchList.itemType = this.cats.itemType
-      console.log(this.cats)
     }
   }
 </script>
