@@ -2,7 +2,22 @@
 </style>
 <template>
   <view>
-    历史记录
+
+    <van-cell-group class="results">
+      <van-cell
+        wx:for="{{history}}"
+        wx:key="{{index}}"
+        custom-class="{{item.type}} item"
+        id="{{item._id}}"
+        title="{{item.itemName}}"
+        value="{{item.status === 0 ? '进行中' : '已关闭'}}"
+        label="{{item.desc}}"
+        is-link
+        @tap="handleClickItem"
+        border="{{ false }}"
+      >
+      </van-cell>
+    </van-cell-group>
   </view>
 </template>
 
@@ -13,15 +28,33 @@
     config = {
       navigationBarTitleText: '历史记录',
       usingComponents: {
+        'van-cell': '../components/vant/cell/index',
+        'van-cell-group': '../components/vant/cell-group/index',
       }
     }
 
     data = {
+      history
     }
 
     methods = {
+      handleClickItem(e) {
+        wx.navigateTo({
+          url: '/pages/detail?id=' + e.target.id
+        })
+      }
     }
 
-    onLoad() {}
+    onLoad() {
+      const self = this
+      wx.cloud.callFunction({
+        name: 'getHistory',
+        success(res) {
+          console.log(res)
+          self.history = res.result.data
+          self.$apply()
+        }
+      })
+    }
   }
 </script>
