@@ -29,7 +29,7 @@
       navigationBarTitleText: '历史记录',
       usingComponents: {
         'van-cell': '../components/vant/cell/index',
-        'van-cell-group': '../components/vant/cell-group/index',
+        'van-cell-group': '../components/vant/cell-group/index'
       }
     }
 

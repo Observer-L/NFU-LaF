@@ -52,11 +52,6 @@
           icon="underway-o"></van-cell>
         <van-cell
           is-link
-          title="反馈建议"
-          border="{{ false }}"
-          icon="comment-o"></van-cell>
-        <van-cell
-          is-link
           title="关于南苑寻物"
           url="/pages/about"
           border="{{ false }}"

@@ -2,7 +2,12 @@
 </style>
 <template>
   <view>
-    about
+    <view>南苑寻物</view>
+    <view>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab accusantium aperiam delectus, dolores esse fugiat fugit id magni minus, neque, quae quaerat quisquam reiciendis voluptatem voluptates! Iste nulla recusandae sapiente.</view>
+    <van-button open-type="contact" size="small" custom-class="contact-btn"	>
+      <van-icon name="chat" />
+      反馈建议
+    </van-button>
   </view>
 </template>
 
@@ -13,6 +18,9 @@
     config = {
       navigationBarTitleText: '关于南苑寻物',
       usingComponents: {
+        'van-button': '../components/vant/button/index',
+        'van-icon': '../components/vant/icon/index',
+        'van-cell': '../components/vant/cell/index'
       }
     }
 
