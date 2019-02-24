@@ -61,10 +61,12 @@
       </van-panel>
     </view>
 
+  <block wx:if="{{itemData.status === 0}}">
     <van-button
       open-type='share'
       plain
       size="large"
+      type="default"
     >
       分享
     </van-button>
@@ -78,6 +80,7 @@
       <van-icon name="{{action[1]}}"></van-icon>
       {{action[0]}}
     </van-button>
+  </block>
 
     <van-popup show="{{ showMap }}" @close="handlePopupMap">
       <map
@@ -195,7 +198,6 @@
             id: options.id
           },
           success(res) {
-            console.log(res)
             let result = res.result.data
             result = Object.assign(result, {
               reportedTime: format2RelativeTime(result.reportedTime),
@@ -215,9 +217,6 @@
             self.circles[0].color = result.type === 'lost' ? circlesStyle.lostColor + '50' : circlesStyle.foundColor + '50'
             self.itemData = result
             self.$apply()
-          },
-          fail(e) {
-            console.log(e)
           }
         })
         return

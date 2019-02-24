@@ -953,5 +953,10 @@
           })
       })
     }
+
+    clearClosedItem(data) {
+    //  TODO: 输入初始POI数据，输出marker和circle
+    }
+
   }
 </script>

@@ -96,7 +96,7 @@
   <view class="item {{info.type}}">
     <view class="item_title">
       <view class="item_status">
-        <text>{{infoType}}</text>
+        <text>{{info.type}}</text>
       </view>
       <view class="item_reported_time">
         <text class="item_reported_time_prefix">发布时间：</text>

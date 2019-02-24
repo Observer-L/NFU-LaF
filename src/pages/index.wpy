@@ -56,11 +56,8 @@
       position:absolute;
       right:0;
       top:0;
-      /*padding: 0 20rpx 20rpx 20rpx;*/
       width: 136rpx;
       height: 136rpx;
-      background:#f8f8f8;
-      color: #fff;
       transition: transform .2s ease-out;
       transform: translateX(150rpx);
       z-index: 1;
@@ -70,26 +67,19 @@
       .lost, .found {
         height: 50%;
         line-height: 60rpx;
-        /*padding: 8rpx;*/
         font-size: 14px;
         text-align: center;
-        background: rgba(0,0,0,.2);
-        color: #000;
+        background: rgba(0,0,0,.8);
+        color: #fff;
         transition: all .2s ease;
-        &.selected {
-          color: #fff;
-        }
       }
       .lost {
         &.selected {
           background: @lostColor;
         }
-        margin-bottom: 8rpx;
       }
-      .found {
-        &.selected {
+      .found.selected {
           background: @foundColor;
-        }
       }
     }
     .mask {
@@ -103,6 +93,9 @@
 
   .card-wrapper {
     padding: 20rpx;
+    .card {
+      margin-bottom: 20rpx;
+    }
   }
 
   .search-tabs {
@@ -203,6 +196,9 @@
         <van-transition show="{{ showCard }}" class="card" name="fade-up">
           <Card :info.sync="targetPOI"></Card>
         </van-transition>
+        <repeat for="{{markers}}" key="index" index="index" item="item" wx:if="{{ !showCard }}">
+          <Card :info.sync="item" class="card"></Card>
+        </repeat>
       </view>
     </van-transition>
 
@@ -269,10 +265,6 @@
                 @tap="handleClickItem"
                 border="{{ false }}"
               >
-                <!--<view slot="title">-->
-                <!--<view class="van-cell-text">{{item.itemName}}</view>-->
-                <!--<van-tag type="{{item.type === 'lost' ? 'danger' : 'primary'}}">{{item.type}}</van-tag>-->
-                <!--</view>-->
               </van-cell>
             </block>
           </van-cell-group>
@@ -346,7 +338,7 @@
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '南苑寻物',
-      disableScroll: true,
+      // disableScroll: true,
       usingComponents: {
         'van-card': '../components/vant/card/index',
         'van-search': '../components/vant/search/index',
@@ -435,6 +427,7 @@
       handleMapTap() {
         this.showMapFilter = false
         this.isActive = false
+        this.showCard = false
       },
       handleToggleAction() {
         this.isActive = !this.isActive
@@ -455,15 +448,12 @@
         if (e.target.id === 'lost') {
           this.selectedFilter.lost = !this.selectedFilter.lost
           !this.selectedFilter.lost ? this.markers = this.foundMarkers : this.markers = this.markers.concat(this.lostMarkers)
-          if (!this.selectedFilter.lost && !this.selectedFilter.found) {
-            this.markers = []
-          }
         } else {
           this.selectedFilter.found = !this.selectedFilter.found
           !this.selectedFilter.found ? this.markers = this.lostMarkers : this.markers = this.markers.concat(this.foundMarkers)
-          if (!this.selectedFilter.lost && !this.selectedFilter.found) {
-            this.markers = []
-          }
+        }
+        if (!this.selectedFilter.lost && !this.selectedFilter.found) {
+          this.markers = []
         }
       },
       showSearchSection() {

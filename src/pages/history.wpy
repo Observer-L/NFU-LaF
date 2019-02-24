@@ -1,4 +1,15 @@
 <style lang="less">
+  @import "../style/custom";
+  .results {
+    .item {
+      &.lost {
+        color: @lostColor;
+      }
+      &.found {
+        color: @foundColor;
+      }
+    }
+  }
 </style>
 <template>
   <view>

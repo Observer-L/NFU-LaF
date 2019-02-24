@@ -1,10 +1,30 @@
 <style lang="less">
+  .page {
+    background:#fff;
+    height:100vh;
+    padding: 26rpx;
+    .title {
+      font-size: 36px;
+      margin: 20rpx 0;
+    }
+    .content {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 40rpx;
+    }
+  }
 </style>
 <template>
-  <view>
-    <view>南苑寻物</view>
-    <view>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab accusantium aperiam delectus, dolores esse fugiat fugit id magni minus, neque, quae quaerat quisquam reiciendis voluptatem voluptates! Iste nulla recusandae sapiente.</view>
-    <van-button open-type="contact" size="small" custom-class="contact-btn"	>
+  <view class="page">
+    <view class="title">南苑寻物</view>
+    <view class="content">
+      南苑寻物（南寻）是一款以地图为载体、服务于中山大学南方学院的失物招领小程序。
+      解决了在校师生失物招领无平台、低效不便的问题，为在校师生提供一个更加高效便捷的失物招领平台。</view>
+    <van-button
+      open-type="contact"
+      size="small"
+      custom-class="contact-btn"
+    >
       <van-icon name="chat" />
       反馈建议
     </van-button>

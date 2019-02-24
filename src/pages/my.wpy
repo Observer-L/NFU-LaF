@@ -39,7 +39,7 @@
           icon="friends-o"></van-cell>
         <van-cell
           title="隐私设置"
-          label="描述信息"
+          label="暂未应用"
           border="{{ false }}"
           is-link
           url="/pages/privacy"
